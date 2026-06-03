@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── NextAuth Required Tables ────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String    @default("user")
+  bio           String?
+  location      String?
+  cityCode      String?   @default("Istanbul")
+  isPublic      Boolean   @default(true)
+  trustScore    Float     @default(0.0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  wardrobeItems WardrobeItem[]
+  listings      Listing[]
+  styleProfile  StyleProfile?
+  sentMessages     Message[]      @relation("SentMessages")
+  conversations    ConversationParticipant[]
+  savedCards       SavedCard[]
+  buyerOrders      Order[]        @relation("BuyerOrders")
+  sellerOrders     Order[]        @relation("SellerOrders")
+  promoRedemptions PromoRedemption[]
+  favorites        Favorite[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Payment & Trust ──────────────────────────────────────────────────────────
+
+model SavedCard {
+  id         String   @id @default(cuid())
+  userId     String
+  cardNumber String   // Güvenlik için masked tutulacak (Örn: **** **** **** 1234)
+  cardName   String
+  expiryDate String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Wardrobe ─────────────────────────────────────────────────────────────────
+
+model WardrobeItem {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  category  String
+  color     String?
+  brand     String?
+  size      String?
+  imageUrl  String?
+  tags      String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Style Profile ────────────────────────────────────────────────────────────
+
+model StyleProfile {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  bodyType   String?
+  colors     String[]
+  styles     String[]
+  topSize    String?
+  bottomSize String?
+  shoeSize   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Marketplace ──────────────────────────────────────────────────────────────
+
+model Listing {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String   @db.Text
+  category    String
+  brand       String?
+  size        String?
+  condition   String
+  price       Float
+  allowSwap   Boolean  @default(false)
+  images      String[]
+  status      String   @default("active") // active | sold | deleted
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversations Conversation[]
+  orders        Order[]
+  favorites     Favorite[]
+}
+
+// ─── Messaging ────────────────────────────────────────────────────────────────
+
+model Conversation {
+  id        String   @id @default(cuid())
+  listingId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listing      Listing?                  @relation(fields: [listingId], references: [id])
+  participants ConversationParticipant[]
+  messages     Message[]
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         String
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String   @db.Text
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       User         @relation("SentMessages", fields: [senderId], references: [id])
+}
+
+// ─── Orders & Shipping ────────────────────────────────────────────────────────
+
+model Order {
+  id              String   @id @default(cuid())
+  buyerId         String
+  sellerId        String
+  listingId       String
+  price           Float
+  currency        String   @default("TRY")
+  status          String   @default("pending") // pending | paid | shipped | delivered | cancelled | refunded
+  trackingNumber  String?
+  trackingCarrier String?  // MNG, Yurtici, PTT, Aras vb.
+  shippingAddress String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  buyer    User     @relation("BuyerOrders",  fields: [buyerId],   references: [id])
+  seller   User     @relation("SellerOrders", fields: [sellerId],  references: [id])
+  listing  Listing  @relation(fields: [listingId], references: [id])
+  events   TrackingEvent[]
+}
+
+model TrackingEvent {
+  id          String   @id @default(cuid())
+  orderId     String
+  status      String   // e.g. "shipped", "in_transit", "out_for_delivery", "delivered"
+  description String
+  location    String?
+  createdAt   DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+// ─── Promotions & Promo Codes ─────────────────────────────────────────────────
+
+model PromoCode {
+  id             String   @id @default(cuid())
+  code           String   @unique // Benzersiz kod (Örn: VESTI20, YENI10)
+  discountType   String   // "percentage" | "fixed" | "wallet"
+  discountValue  Float    // Yüzde veya TL değeri
+  description    String?
+  minOrderAmount Float?   // Minimum sipariş tutarı
+  expiresAt      DateTime?
+  isActive       Boolean  @default(true)
+  maxUses        Int?     // Null = sınırsız
+  usedCount      Int      @default(0)
+  createdAt      DateTime @default(now())
+
+  redemptions PromoRedemption[]
+}
+
+model PromoRedemption {
+  id          String   @id @default(cuid())
+  userId      String
+  promoCodeId String
+  redeemedAt  DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promoCode PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, promoCodeId]) // Bir kullanıcı aynı kodu 1 kez kullanabilir
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+}
