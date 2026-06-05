@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   ShoppingBag, Truck, CheckCircle2, Clock, XCircle,
-  AlertTriangle, PackageCheck, TrendingUp
+  AlertTriangle, PackageCheck, TrendingUp, BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -58,6 +58,7 @@ export function SalesTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [trackingInputs, setTrackingInputs] = useState<Record<string, { number: string; carrier: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const [showStats, setShowStats] = useState(false);
   const totalEarned = orders
     .filter(o => ["shipped", "delivered"].includes(o.status))
     .reduce((sum, o) => sum + o.price, 0);
@@ -75,10 +76,37 @@ export function SalesTab() {
 
   const handleShip = async (orderId: string) => {
     const input = trackingInputs[orderId];
-    if (!input?.number || !input?.carrier) {
-      toast.error(t.selectCarrier);
-      return;
+    const cleanNumber = input.number.trim();
+    const carrier = input.carrier;
+
+    // Carrier specific validations
+    if (carrier === "Yurtiçi Kargo") {
+      if (cleanNumber.length !== 12 || !/^\d+$/.test(cleanNumber)) {
+        toast.error(language === "en" ? "Yurtiçi Kargo tracking number must be exactly 12 digits." : "Yurtiçi Kargo takip numarası sadece rakamlardan oluşmalı ve tam 12 haneli olmalıdır.");
+        return;
+      }
+    } else if (carrier === "Aras Kargo") {
+      if (cleanNumber.length !== 13 || !/^\d+$/.test(cleanNumber)) {
+        toast.error(language === "en" ? "Aras Kargo tracking number must be exactly 13 digits and fully numeric." : "Aras Kargo takip numarası tamamen rakamlardan oluşmalı ve tam 13 haneli olmalıdır.");
+        return;
+      }
+    } else if (carrier === "MNG Kargo") {
+      if (cleanNumber.length !== 12 || !/^\d+$/.test(cleanNumber)) {
+        toast.error(language === "en" ? "MNG Kargo tracking number must be exactly 12 digits." : "MNG Kargo takip numarası sadece rakamlardan oluşmalı ve tam 12 haneli olmalıdır.");
+        return;
+      }
+    } else if (carrier === "PTT Kargo") {
+      if (cleanNumber.length !== 13) {
+        toast.error(language === "en" ? "PTT Kargo tracking number must be exactly 13 characters." : "PTT Kargo takip numarası tam 13 haneli olmalıdır.");
+        return;
+      }
+    } else if (carrier === "Sürat Kargo") {
+      if (cleanNumber.length !== 14 || !/^\d+$/.test(cleanNumber)) {
+        toast.error(language === "en" ? "Sürat Kargo tracking number must be exactly 14 digits." : "Sürat Kargo takip numarası sadece rakamlardan oluşmalı ve tam 14 haneli olmalıdır.");
+        return;
+      }
     }
+
     setSubmitting(orderId);
     try {
       await axios.patch(`/api/orders/${orderId}/tracking`, {
@@ -111,42 +139,57 @@ export function SalesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Card 1 */}
-        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-50 rounded-xl shrink-0">
-            <TrendingUp className="w-5 h-5 text-emerald-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{t.totalEarned}</p>
-            <p className="text-lg font-extrabold text-gray-800 mt-0.5 whitespace-nowrap">{totalEarned.toLocaleString("tr-TR")} ₺</p>
-          </div>
-        </div>
-
-        {/* Card 2 */}
-        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-3">
-          <div className="p-2.5 bg-sky-50 rounded-xl shrink-0">
-            <Clock className="w-5 h-5 text-sky-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{t.pendingPayment}</p>
-            <p className="text-lg font-extrabold text-gray-800 mt-0.5 whitespace-nowrap">{pendingEarnings.toLocaleString("tr-TR")} ₺</p>
-          </div>
-        </div>
-
-        {/* Card 3 */}
-        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-3">
-          <div className="p-2.5 bg-purple-50 rounded-xl shrink-0">
-            <CheckCircle2 className="w-5 h-5 text-purple-600" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{t.totalSales}</p>
-            <p className="text-lg font-extrabold text-gray-800 mt-0.5 whitespace-nowrap">
-              {orders.length} <span className="text-xs text-gray-400 font-semibold">{t.items}</span>
-            </p>
-          </div>
-        </div>
+      <div className="flex justify-end">
+        <Button
+          onClick={() => setShowStats(!showStats)}
+          variant="outline"
+          className="flex items-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl px-4 py-2 text-xs font-semibold shadow-sm transition-all"
+        >
+          <BarChart3 className="w-4 h-4 text-vesti-primary" />
+          {showStats 
+            ? (language === "en" ? "Hide Stats" : "İstatistikleri Gizle") 
+            : (language === "en" ? "İstatistikleri Gör" : "İstatistikleri Gör")}
+        </Button>
       </div>
+
+      {showStats && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-3 duration-300">
+          {/* Card 1 */}
+          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-3">
+            <div className="p-2.5 bg-emerald-50 rounded-xl shrink-0">
+              <TrendingUp className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{t.totalEarned}</p>
+              <p className="text-lg font-extrabold text-gray-800 mt-0.5 whitespace-nowrap">{totalEarned.toLocaleString("tr-TR")} ₺</p>
+            </div>
+          </div>
+
+          {/* Card 2 */}
+          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-3">
+            <div className="p-2.5 bg-sky-50 rounded-xl shrink-0">
+              <Clock className="w-5 h-5 text-sky-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{t.pendingPayment}</p>
+              <p className="text-lg font-extrabold text-gray-800 mt-0.5 whitespace-nowrap">{pendingEarnings.toLocaleString("tr-TR")} ₺</p>
+            </div>
+          </div>
+
+          {/* Card 3 */}
+          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-3">
+            <div className="p-2.5 bg-purple-50 rounded-xl shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{t.totalSales}</p>
+              <p className="text-lg font-extrabold text-gray-800 mt-0.5 whitespace-nowrap">
+                {orders.length} <span className="text-xs text-gray-400 font-semibold">{t.items}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Satış Listesi */}
       {orders.length === 0 ? (
