@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createListingSchema, CreateListingInput } from '@/lib/validations/marketplace';
 import { Tag, ArrowRightLeft, UploadCloud, X, Sparkles } from 'lucide-react';
 import { ClothingItem } from '@/lib/api/wardrobe.api';
+import { toast } from 'sonner';
 
 const STEPS = ['Temel Bilgiler', 'Detaylar & Fotoğraf', 'Fiyat & Takas'];
 
@@ -109,15 +110,17 @@ export function CreateListingForm() {
             });
 
             if (res.ok) {
-                alert('İlanınız başarıyla oluşturuldu!');
-                window.location.href = '/marketplace';
+                toast.success('İlanınız başarıyla oluşturuldu!');
+                setTimeout(() => {
+                    window.location.href = '/marketplace';
+                }, 1500);
             } else {
                 const err = await res.json().catch(() => ({}));
-                alert(err.message || 'İlan oluşturulurken bir hata oluştu.');
+                toast.error(err.message || 'İlan oluşturulurken bir hata oluştu.');
             }
         } catch (error) {
             console.error(error);
-            alert('Bağlantı hatası oluştu.');
+            toast.error('Bağlantı hatası oluştu.');
         } finally {
             setIsSubmitting(false);
         }

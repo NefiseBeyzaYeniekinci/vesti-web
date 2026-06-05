@@ -1,4 +1,4 @@
-import { getMarketplaceItemById } from "@/lib/api/marketplace";
+import { getMarketplaceItemByIdServer } from "@/lib/api/marketplace-server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
-  const item = await getMarketplaceItemById(params.id);
+  const item = await getMarketplaceItemByIdServer(params.id);
   if (!item) return { title: "İlan Bulunamadı | Vesti Checkout" };
   return { title: `Ödeme: ${item.title} | Vesti` };
 }
@@ -20,7 +20,7 @@ export default async function CheckoutPage({ params }: { params: { id: string } 
     redirect("/login");
   }
 
-  const item = await getMarketplaceItemById(params.id);
+  const item = await getMarketplaceItemByIdServer(params.id);
 
   if (!item) {
     notFound();

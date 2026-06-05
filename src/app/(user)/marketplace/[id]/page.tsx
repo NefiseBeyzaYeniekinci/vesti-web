@@ -1,4 +1,4 @@
-import { getMarketplaceItemById } from '@/lib/api/marketplace';
+import { getMarketplaceItemByIdServer } from '@/lib/api/marketplace-server';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRightLeft, MapPin, Tag, ShieldCheck } from 'lucide-react';
@@ -8,13 +8,13 @@ import { SwapOfferModal } from '@/components/marketplace/SwapOfferModal';
 import { auth } from '@/auth';
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
-    const item = await getMarketplaceItemById(params.id);
+    const item = await getMarketplaceItemByIdServer(params.id);
     if (!item) return { title: 'İlan Bulunamadı | Vesti' };
     return { title: `${item.title} | Vesti Marketplace` };
 }
 
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
-    const item = await getMarketplaceItemById(params.id);
+    const item = await getMarketplaceItemByIdServer(params.id);
     const session = await auth();
     const isLoggedIn = !!session?.user;
 

@@ -12,6 +12,7 @@ import { loginSchema, registerSchema, LoginFormData, RegisterFormData } from "@/
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Mail, Lock, User, Eye, EyeOff, Sparkles, Shirt } from "lucide-react";
+import { toast } from "sonner";
 
 interface InteractiveAuthScreenProps {
     initialMode?: "login" | "register";
@@ -96,10 +97,10 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
     const handleForgotPassword = () => {
         const email = loginForm.getValues("email");
         if (!email) {
-            alert("Lütfen önce e-posta adresinizi giriniz.");
+            toast.error("Lütfen önce e-posta adresinizi giriniz.");
             return;
         }
-        alert(`${email} adresine şifre sıfırlama bağlantısı gönderildi!`);
+        toast.success(`${email} adresine şifre sıfırlama bağlantısı gönderildi!`);
     };
 
     // Submitting Register
