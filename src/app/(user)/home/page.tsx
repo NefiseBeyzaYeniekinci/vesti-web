@@ -262,17 +262,19 @@ export default async function HomePage() {
         analysisTitle: language === "en" ? "Wardrobe Analysis" : "Dolabının Analizi",
         inspirationTitle: language === "en" ? "TODAY'S INSPIRATION" : "BUGÜNÜN İLHAMI",
     };
-
     let cityCode = "Istanbul";
     let lastAdded: HomeWardrobeItem[] = [];
     let totalCount = 0;
     let colorGroups: ColorGroup[] = [];
     let categoryGroups: CategoryGroup[] = [];
+    let activeListings: any[] = [];
+    let styleProfile: any = null;
+    let marketplaceItems: { id: string; name: string; price: string; image: string; matchPct: number; }[] = [];
 
     if (userId) {
         try {
             // Run all user queries in parallel for peak performance
-            const [user, items, count, colors, categories] = await Promise.all([
+            const [user, items, count, colors, categories, profile, listings] = await Promise.all([
                 prisma.user.findUnique({
                     where: { id: userId },
                     select: { location: true },
@@ -299,6 +301,17 @@ export default async function HomePage() {
                     orderBy: { _count: { category: 'desc' } },
                     take: 1,
                 }),
+                prisma.styleProfile.findUnique({
+                    where: { userId },
+                    select: { styles: true },
+                }),
+                prisma.listing.findMany({
+                    where: {
+                        status: "active",
+                        userId: { not: userId }
+                    },
+                    orderBy: { createdAt: 'desc' },
+                }),
             ]);
 
             if (user?.location) cityCode = user.location.split(',')[0].trim();
@@ -306,6 +319,8 @@ export default async function HomePage() {
             totalCount = count;
             colorGroups = colors;
             categoryGroups = categories;
+            styleProfile = profile;
+            activeListings = listings;
         } catch (error) {
             console.error("Home page DB query error:", error);
         }
@@ -358,6 +373,51 @@ export default async function HomePage() {
     const weatherMain = weather.weather[0]?.main ?? "Clear";
     const weatherDesc = weather.weather[0]?.description ?? "";
     const kombins    = getOutfitSuggestions(temp, weatherMain, language);
+
+    // Filter marketplace items based on temperature and style preferences
+    const isWarm = temp > 22;
+    const isCold = temp < 14;
+
+    let filteredListings = activeListings;
+    if (isWarm) {
+        filteredListings = activeListings.filter(item => 
+            ["tisort", "t-shirt", "short", "şort", "etek", "elbise", "ayakkabi", "ayakkabı", "gömlek", "gomlek"].includes((item.category || "").toLowerCase())
+        );
+    } else if (isCold) {
+        filteredListings = activeListings.filter(item => 
+            ["kazak", "kaban", "ceket", "mont", "hirka", "hırka", "pantolon", "bot"].includes((item.category || "").toLowerCase())
+        );
+    }
+
+    const userStyles: string[] = styleProfile?.styles ?? [];
+    if (userStyles.length > 0 && filteredListings.length > 0) {
+        const matched = filteredListings.filter(item => 
+            userStyles.some((style: string) => {
+                const s = style.toLowerCase();
+                return (item.title || "").toLowerCase().includes(s) || 
+                       (item.description || "").toLowerCase().includes(s) ||
+                       (item.category || "").toLowerCase().includes(s);
+            })
+        );
+        if (matched.length > 0) {
+            filteredListings = matched;
+        }
+    }
+
+    if (filteredListings.length === 0 && activeListings.length > 0) {
+        filteredListings = activeListings;
+    }
+
+    marketplaceItems = filteredListings.slice(0, 4).map((item, index) => {
+        const matchPct = Math.round(98 - index * 5 - Math.random() * 3);
+        return {
+            id: item.id,
+            name: item.title,
+            price: `${item.price.toLocaleString("tr-TR")} TL`,
+            image: item.images[0] ?? "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500",
+            matchPct: Math.max(matchPct, 75)
+        };
+    });
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '48px', paddingBottom: '64px' }}>
@@ -1125,7 +1185,7 @@ export default async function HomePage() {
                 </div>
 
                 {/* Horizontal Scroll Cards or Empty State */}
-                {totalCount === 0 ? (
+                {totalCount < 10 ? (
                     <div style={{
                         padding: '32px 24px',
                         backgroundColor: '#FFFFFF',
@@ -1147,8 +1207,8 @@ export default async function HomePage() {
                             lineHeight: 1.6
                         }}>
                             {language === 'en'
-                                ? 'Since there are no clothes in your wardrobe yet, we cannot display selections matching your style. Once you add clothes, we will analyze your style and recommend marketplace items!'
-                                : 'Dolabınızda henüz kıyafet bulunmadığı için tarzınıza özel seçimler sunulamamaktadır. Kıyafet ekledikten sonra kişisel tarz analiziniz yapılacak ve uygun marketplace ürünleri burada listelenecektir.'}
+                                ? 'You must have at least 10 items in your wardrobe to see custom style selections. Add more clothes to help us analyze your style!'
+                                : 'Tarzınıza özel seçimleri görebilmek için dolabınızda en az 10 adet kıyafet bulunmalıdır. Dolabınıza kıyafet ekleyerek tarzınızı analiz etmemize yardımcı olun!'}
                         </p>
                         <Link href="/wardrobe" style={{ textDecoration: 'none' }}>
                             <span style={{
@@ -1169,9 +1229,35 @@ export default async function HomePage() {
                             </span>
                         </Link>
                     </div>
+                ) : marketplaceItems.length === 0 ? (
+                    <div style={{
+                        padding: '32px 24px',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: '24px',
+                        border: '0.5px dashed #E0E3E8',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '12px',
+                        boxShadow: '0 2px 12px rgba(0,0,0,0.01)'
+                    }}>
+                        <p style={{
+                            fontSize: '13px',
+                            color: '#607080',
+                            margin: 0,
+                            maxWidth: '460px',
+                            lineHeight: 1.6
+                        }}>
+                            {language === 'en'
+                                ? 'Selections matching your style will be with you soon! 🛍️'
+                                : 'Yakında tarzınıza uygun seçimler sizinle! 🛍️'}
+                        </p>
+                    </div>
                 ) : (
                     <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '16px', paddingBottom: '8px' }}>
-                        {mockMarketplaceItems.map((item) => (
+                        {marketplaceItems.map((item) => (
                             <div
                                 key={item.id}
                                 className="vesti-card"
@@ -1225,7 +1311,7 @@ export default async function HomePage() {
                                             {item.price}
                                         </p>
                                     </div>
-                                    <Link href="/marketplace" style={{ marginTop: '12px', display: 'block' }}>
+                                    <Link href={`/marketplace`} style={{ marginTop: '12px', display: 'block' }}>
                                         <button style={{
                                             width: '100%',
                                             padding: '8px 0',
