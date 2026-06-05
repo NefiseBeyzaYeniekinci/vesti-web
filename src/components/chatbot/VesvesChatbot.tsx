@@ -41,7 +41,7 @@ export default function VesvesChatbot() {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      const response = await fetch('http://127.0.0.1:5000/api/analyze', { method: 'POST', body: formData });
+      const response = await fetch('/api/ai/analyze', { method: 'POST', body: formData });
       const data = await response.json();
       setMessages((prev) =>
         prev.map(msg => msg.id === loadingId
