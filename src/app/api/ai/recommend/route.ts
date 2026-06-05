@@ -13,7 +13,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Kullanıcı ID gereklidir" }, { status: 400 });
     }
 
-    // 1. Pazar yerindeki yayındaki ilanları çekelim (Kendi ilanları hariç)
+    // 1. Kullanıcının kendi gardırobundaki kıyafet sayısını kontrol et (en az 10 parça olmalı)
+    const myItemsCount = await prisma.wardrobeItem.count({
+      where: { userId: user_id }
+    });
+
+    if (myItemsCount < 10) {
+      return NextResponse.json({
+        outfit_id: "recommend_insufficient_items",
+        description: "Tarzınıza özel seçimleri görebilmek için gardırobunuza en az 10 adet kıyafet eklemelisiniz. 👗",
+        items: []
+      });
+    }
+
+    // 2. Pazar yerindeki yayındaki ilanları çekelim (Kendi ilanları hariç)
     const listings = await prisma.listing.findMany({
       where: {
         status: "active",
@@ -25,7 +38,7 @@ export async function POST(req: Request) {
     const isWarm = temperature > 22;
     const isCold = temperature < 14;
 
-    // 2. Mevsimsel sıcaklığa göre pazar yeri ilanlarını filtrele
+    // 3. Mevsimsel sıcaklığa göre pazar yeri ilanlarını filtrele
     let filteredListings = listings;
     if (isWarm) {
       filteredListings = listings.filter(item => 
@@ -37,7 +50,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. Kullanıcının tarz tercihine göre eşleşen ilanları filtrele
+    // 4. Kullanıcının tarz tercihine göre eşleşen ilanları filtrele
     if (style_preference && filteredListings.length > 0) {
       const pref = style_preference.toLowerCase();
       const styleMatches = filteredListings.filter(item => 
@@ -50,12 +63,12 @@ export async function POST(req: Request) {
       }
     }
 
-    // 4. Eğer mevsimsel/tarz filtresine uyan bulunamadıysa ama genel ilanlar varsa onlardan seç
+    // 5. Eğer mevsimsel/tarz filtresine uyan bulunamadıysa ama genel ilanlar varsa onlardan seç
     if (filteredListings.length === 0 && listings.length > 0) {
       filteredListings = listings;
     }
 
-    // 5. Eğer pazar yerinde hiç aktif ilan yoksa veya sığmıyorsa
+    // 6. Eğer pazar yerinde hiç aktif ilan yoksa veya sığmıyorsa
     if (filteredListings.length === 0) {
       return NextResponse.json({
         outfit_id: "recommend_empty",
