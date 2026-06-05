@@ -1,4 +1,4 @@
-import { getConversation, getMessages, getConversations } from "@/lib/api/messages";
+import { getConversationServer, getMessagesServer, getConversationsServer } from "@/lib/api/messages-server";
 import { ConversationList } from "@/components/messages/ConversationList";
 import { ChatWindow } from "@/components/messages/ChatWindow";
 import { notFound } from "next/navigation";
@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const conv = await getConversation(id);
+  const conv = await getConversationServer(id);
   const session = await auth();
   const other = conv?.participants.find((p) => p.id !== session?.user?.id);
   return {
@@ -22,9 +22,9 @@ export default async function ConversationPage({
   const { id } = await params;
   const session = await auth();
   const [conversation, messages, allConversations] = await Promise.all([
-    getConversation(id),
-    getMessages(id),
-    getConversations(),
+    getConversationServer(id),
+    getMessagesServer(id),
+    getConversationsServer(),
   ]);
 
   if (!conversation) notFound();

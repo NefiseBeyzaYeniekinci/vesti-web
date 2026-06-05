@@ -8,6 +8,8 @@ import { useClientLanguage } from '@/lib/i18n/client';
 import Link from 'next/link';
 import { Shirt } from 'lucide-react';
 
+import { toast } from 'sonner';
+
 export default function SuggestionsPage() {
     const language = useClientLanguage();
     const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -38,13 +40,12 @@ export default function SuggestionsPage() {
         picks: language === "en" ? "Selected For You" : "Senin İçin Seçtiklerimiz",
         refresh: language === "en" ? "Refresh Suggestions" : "Önerileri Yenile",
         cityAria: language === "en" ? "Select city" : "Il sec",
-        pendingFeature: language === "en" ? "This feature will be available soon." : "Bu ozellik yakinda aktif olacak.",
+        pendingFeature: language === "en" ? "This feature will be available soon." : "Bu özellik yakında aktif olacak.",
     };
 
     const loadSuggestions = useCallback(async () => {
         try {
             setLoading(true);
-            // Örnek: Hava 20 derece
             const res = await fetch(`/api/suggestions?temp=20&condition=Clouds&city=${encodeURIComponent(selectedCity)}`);
             if (res.ok) {
                 const json = await res.json();
@@ -60,15 +61,13 @@ export default function SuggestionsPage() {
         }
     }, [selectedCity]);
 
-    // Normalde hava durumuna göre (WeatherWidget içindeki data ile) çağrılabilir.
-    // Ancak mock API olduğu için şimdilik sabit bir hava koşulu parametresi gönderiyoruz.
     useEffect(() => {
         loadSuggestions();
     }, [loadSuggestions]);
 
     const handleGenerateSimilar = async (id: string) => {
         console.log(`Buna benzer yeni bir id isteniyor: ${id}`);
-        alert(t.pendingFeature);
+        toast.info(t.pendingFeature);
     };
 
     return (

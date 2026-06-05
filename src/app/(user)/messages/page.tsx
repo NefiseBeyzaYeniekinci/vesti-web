@@ -1,4 +1,4 @@
-import { getConversations } from "@/lib/api/messages";
+import { getConversationsServer } from "@/lib/api/messages-server";
 import { ConversationList } from "@/components/messages/ConversationList";
 import { auth } from "@/auth";
 import { cookies } from "next/headers";
@@ -10,7 +10,7 @@ export const metadata = {
 
 export default async function MessagesPage() {
   const session = await auth();
-  const conversations = await getConversations();
+  const conversations = await getConversationsServer();
   
   const cookieStore = cookies();
   const language = cookieStore.get("vesti-lang")?.value === "en" ? "en" : "tr";
