@@ -11,6 +11,8 @@ export interface Message {
   content: string;
   createdAt: string;
   read: boolean;
+  swapItemId?: string;
+  swapStatus?: string;
 }
 
 export interface Conversation {

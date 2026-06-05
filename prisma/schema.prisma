@@ -176,6 +176,8 @@ model Message {
   senderId       String
   content        String   @db.Text
   read           Boolean  @default(false)
+  swapItemId     String?
+  swapStatus     String?  // pending | accepted | rejected
   createdAt      DateTime @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)

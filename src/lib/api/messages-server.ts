@@ -70,6 +70,8 @@ export async function getConversationsServer(): Promise<Conversation[]> {
         content: lastMsg.content,
         createdAt: lastMsg.createdAt.toISOString(),
         read: lastMsg.read,
+        swapItemId: lastMsg.swapItemId ?? undefined,
+        swapStatus: lastMsg.swapStatus ?? undefined,
       },
       unreadCount: unreadMap[conv.id] ?? 0,
       updatedAt: conv.updatedAt.toISOString(),
@@ -128,6 +130,8 @@ export async function getConversationServer(id: string): Promise<Conversation | 
           content: lastMsg.content,
           createdAt: lastMsg.createdAt.toISOString(),
           read: lastMsg.read,
+          swapItemId: lastMsg.swapItemId ?? undefined,
+          swapStatus: lastMsg.swapStatus ?? undefined,
         }
       : {
           id: "temp",
@@ -194,5 +198,7 @@ export async function getMessagesServer(conversationId: string): Promise<Message
     content: m.content,
     createdAt: m.createdAt.toISOString(),
     read: m.read,
+    swapItemId: m.swapItemId ?? undefined,
+    swapStatus: m.swapStatus ?? undefined,
   }));
 }

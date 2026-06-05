@@ -72,6 +72,8 @@ export async function GET() {
             content: lastMsg.content,
             createdAt: lastMsg.createdAt.toISOString(),
             read: lastMsg.read,
+            swapItemId: lastMsg.swapItemId ?? undefined,
+            swapStatus: lastMsg.swapStatus ?? undefined,
           }
         : null,
       unreadCount: unreadMap[conv.id] ?? 0,
@@ -89,7 +91,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
   }
 
-  const { recipientId, listingId, content } = await req.json();
+  const { recipientId, listingId, content, swapItemId } = await req.json();
 
   if (!recipientId || !content) {
     return NextResponse.json({ message: "Alıcı ve mesaj içeriği gerekli" }, { status: 400 });
@@ -123,6 +125,8 @@ export async function POST(req: Request) {
       conversationId: conversation.id,
       senderId: session.user.id,
       content,
+      swapItemId: swapItemId || null,
+      swapStatus: swapItemId ? "pending" : null,
     },
   });
 
@@ -142,6 +146,8 @@ export async function POST(req: Request) {
         content: message.content,
         createdAt: message.createdAt.toISOString(),
         read: message.read,
+        swapItemId: message.swapItemId ?? undefined,
+        swapStatus: message.swapStatus ?? undefined,
       },
     },
     { status: 201 }

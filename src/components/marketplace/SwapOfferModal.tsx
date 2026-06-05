@@ -148,6 +148,7 @@ export function SwapOfferModal({ sellerId, listingId, sellerName, itemTitle }: S
                     recipientId: sellerId,
                     listingId,
                     content: swapContent,
+                    swapItemId: selectedItemId,
                 }),
             });
 
