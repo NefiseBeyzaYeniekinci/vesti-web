@@ -59,12 +59,43 @@ export default function VesvesChatbot() {
     }
   };
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-    setMessages((prev) => [...prev, { id: Date.now(), text: input, isBot: false }]);
+
+    const userMessage = input;
     setInput("");
-    simulateBotResponse();
+    
+    // Kullanıcı mesajını ekle
+    setMessages((prev) => [...prev, { id: Date.now(), text: userMessage, isBot: false }]);
+
+    // Bot "düşünüyorum..." durumunu ekle
+    const loadingId = Date.now() + 1;
+    setMessages((prev) => [...prev, { id: loadingId, text: "Düşünüyorum... 🧐", isBot: true }]);
+
+    try {
+      const response = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: userMessage }),
+      });
+      const data = await response.json();
+      setMessages((prev) =>
+        prev.map(msg => msg.id === loadingId
+          ? { ...msg, text: data.success ? data.message : "Cevap üretilirken bir hata oluştu." }
+          : msg
+        )
+      );
+    } catch {
+      setMessages((prev) =>
+        prev.map(msg => msg.id === loadingId
+          ? { ...msg, text: "Yapay zeka servisine bağlanırken bir sorun oluştu." }
+          : msg
+        )
+      );
+    }
   };
 
   return (
