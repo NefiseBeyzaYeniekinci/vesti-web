@@ -10,13 +10,14 @@ const Iyzipay = require("iyzipay");
  *   IYZIPAY_API_KEY=sandbox_xxxxxxxxxxx
  *   IYZIPAY_SECRET_KEY=sandbox_xxxxxxxxxxx
  */
+const apiKey = process.env.IYZIPAY_API_KEY ?? "sandbox-OlKWGMkCew0koAp2sL5sxPIuwnsbpWP3";
+const secretKey = process.env.IYZIPAY_SECRET_KEY ?? "sandbox-8M63IDsNO8ZFJfptgxk5xoUhIllQgquP";
+const isSandbox = apiKey.startsWith("sandbox-");
+
 const iyzipay = new Iyzipay({
-  apiKey: process.env.IYZIPAY_API_KEY ?? "sandbox-OlKWGMkCew0koAp2sL5sxPIuwnsbpWP3",
-  secretKey: process.env.IYZIPAY_SECRET_KEY ?? "sandbox-8M63IDsNO8ZFJfptgxk5xoUhIllQgquP",
-  uri:
-    process.env.NODE_ENV === "production"
-      ? "https://api.iyzipay.com"
-      : "https://sandbox-api.iyzipay.com",
+  apiKey,
+  secretKey,
+  uri: isSandbox ? "https://sandbox-api.iyzipay.com" : "https://api.iyzipay.com",
 });
 
 export default iyzipay;
