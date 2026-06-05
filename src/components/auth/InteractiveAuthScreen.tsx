@@ -122,14 +122,14 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
     }
 
     return (
-        <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center font-sans select-none px-4 bg-gradient-to-b from-[#F8F9FA] via-[#F4F5F8] to-[#E8EAF6]">
+        <div className="relative min-h-screen w-full overflow-hidden flex items-center justify-center font-sans select-none px-4 bg-gradient-to-b from-[#F5F7FB] via-[#EFF2F6] to-[#E3E7F2]">
             {/* Soft Ambient Brand Glowing Blobs */}
-            <div className="absolute top-[-10%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[#7986CB]/15 blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[650px] h-[650px] rounded-full bg-[#FF6F61]/8 blur-[140px] pointer-events-none" />
+            <div className="absolute top-[-10%] left-[-10%] w-[550px] h-[550px] rounded-full bg-[#7986CB]/12 blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[650px] h-[650px] rounded-full bg-[#FF6F61]/6 blur-[140px] pointer-events-none" />
 
             {/* Sleek Centered Light-Theme Glassmorphic Card */}
             <div className="w-full max-w-[440px] z-30">
-                <div className="w-full bg-white/70 backdrop-blur-2xl border border-white/80 rounded-3xl p-8 shadow-[0_20px_50px_rgba(121,134,203,0.08)] relative overflow-hidden">
+                <div className="w-full bg-white/85 backdrop-blur-3xl border border-white/60 rounded-[32px] p-8 sm:p-10 shadow-[0_25px_60px_rgba(41,41,77,0.06)] relative overflow-hidden">
                     
                     {/* Decorative subtle light highlight inside card */}
                     <div className="absolute -top-[100px] -right-[100px] w-[200px] h-[200px] rounded-full bg-[#7986CB]/5 blur-[50px] pointer-events-none" />
@@ -141,38 +141,14 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                         </div>
                     </div>
 
-                    {/* Mode Toggle Tabs */}
-                    <div className="flex bg-gray-100/80 border border-gray-200/50 p-1 rounded-full mb-6 relative">
-                        <button
-                            onClick={() => { setMode("login"); setAuthError(null); }}
-                            className={`flex-1 py-2.5 text-xs font-bold tracking-widest uppercase rounded-full transition-all duration-300 relative z-10 ${
-                                mode === "login"
-                                    ? "bg-white text-[#29294D] shadow-sm"
-                                    : "text-gray-400 hover:text-gray-600"
-                            }`}
-                        >
-                            Giriş Yap
-                        </button>
-                        <button
-                            onClick={() => { setMode("register"); setAuthError(null); }}
-                            className={`flex-1 py-2.5 text-xs font-bold tracking-widest uppercase rounded-full transition-all duration-300 relative z-10 ${
-                                mode === "register"
-                                    ? "bg-white text-[#29294D] shadow-sm"
-                                    : "text-gray-400 hover:text-gray-600"
-                            }`}
-                        >
-                            Kayıt Ol
-                        </button>
-                    </div>
-
-                    <div className="text-center mb-6">
-                        <h2 className="text-2xl font-bold text-[#29294D] tracking-tight">
-                            {mode === "login" ? "Hoş Geldiniz" : "Bize Katılın"}
+                    <div className="text-center mb-8">
+                        <h2 className="text-3xl font-bold text-[#29294D] tracking-tight">
+                            {mode === "login" ? "Giriş Yapın" : "Hesap Oluşturun"}
                         </h2>
-                        <p className="text-xs text-gray-400 mt-1.5 font-medium tracking-wide">
+                        <p className="text-xs text-gray-500 mt-2 font-medium tracking-wide">
                             {mode === "login" 
-                                ? "Vesti gardırobunuz kapılarını aralıyor" 
-                                : "Dolabınızı dijitalleştirip kombin üretmeye başlayın"}
+                                ? "Vesti dijital gardırobuna adım atın" 
+                                : "Dolabını dijitalleştir, kombinlerini tasarla"}
                         </p>
                     </div>
 
@@ -192,7 +168,7 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                                         type="email"
                                         placeholder="ornek@vesti.com"
                                         {...loginForm.register("email")}
-                                        className="w-full bg-white border-gray-200/80 text-gray-900 placeholder-gray-450 rounded-xl h-12 pl-11 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] transition-all"
+                                        className="w-full bg-white border-gray-200 text-gray-900 placeholder-gray-400 rounded-2xl h-12 pl-11 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] hover:border-gray-300 transition-all"
                                     />
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 </div>
@@ -208,7 +184,7 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                                         type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
                                         {...loginForm.register("password")}
-                                        className="w-full bg-white border-gray-200/80 text-gray-900 placeholder-gray-450 rounded-xl h-12 pl-11 pr-10 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] transition-all"
+                                        className="w-full bg-white border-gray-200 text-gray-900 placeholder-gray-400 rounded-2xl h-12 pl-11 pr-10 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] hover:border-gray-300 transition-all"
                                     />
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <button
@@ -227,7 +203,7 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full h-12 mt-4 bg-[#7986CB] hover:bg-[#6C75BD] active:scale-[0.98] text-white font-bold tracking-wider uppercase text-xs rounded-full shadow-[0_4px_25px_rgba(121,134,203,0.25)] transition-all flex items-center justify-center gap-2"
+                                className="w-full h-12 mt-2 bg-[#7986CB] hover:bg-[#6C75BD] active:scale-[0.98] text-white font-bold tracking-wider uppercase text-xs rounded-full shadow-[0_4px_25px_rgba(121,134,203,0.2)] transition-all flex items-center justify-center gap-2"
                             >
                                 {isLoading ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -248,7 +224,7 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                                         type="text"
                                         placeholder="Adınız Soyadınız"
                                         {...registerForm.register("name")}
-                                        className="w-full bg-white border-gray-200/80 text-gray-900 placeholder-gray-450 rounded-xl h-11 pl-11 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] transition-all"
+                                        className="w-full bg-white border-gray-200 text-gray-900 placeholder-gray-400 rounded-2xl h-11 pl-11 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] hover:border-gray-300 transition-all"
                                     />
                                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 </div>
@@ -264,7 +240,7 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                                         type="email"
                                         placeholder="ornek@vesti.com"
                                         {...registerForm.register("email")}
-                                        className="w-full bg-white border-gray-200/80 text-gray-900 placeholder-gray-450 rounded-xl h-11 pl-11 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] transition-all"
+                                        className="w-full bg-white border-gray-200 text-gray-900 placeholder-gray-400 rounded-2xl h-11 pl-11 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] hover:border-gray-300 transition-all"
                                     />
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                 </div>
@@ -280,7 +256,7 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                                         type={showPassword ? "text" : "password"}
                                         placeholder="En az 6 karakter"
                                         {...registerForm.register("password")}
-                                        className="w-full bg-white border-gray-200/80 text-gray-900 placeholder-gray-450 rounded-xl h-11 pl-11 pr-10 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] transition-all"
+                                        className="w-full bg-white border-gray-200 text-gray-900 placeholder-gray-400 rounded-2xl h-11 pl-11 pr-10 focus:border-[#7986CB] focus:ring-1 focus:ring-[#7986CB] hover:border-gray-300 transition-all"
                                     />
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                     <button
@@ -297,16 +273,16 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                             </div>
 
                             {/* Terms checkbox */}
-                            <div className="flex items-start space-x-3 bg-gray-50/50 border border-gray-150 p-3 rounded-xl">
+                            <div className="flex items-start space-x-3 bg-gray-50/50 border border-gray-150 p-3 rounded-2xl">
                                 <input
                                     id="acceptTerms"
                                     type="checkbox"
                                     checked={registerForm.watch("acceptTerms")}
                                     onChange={(e) => registerForm.setValue("acceptTerms", e.target.checked)}
-                                    className="border-gray-300 text-[#7986CB] focus:ring-[#7986CB] rounded mt-0.5 h-4 w-4 bg-transparent cursor-pointer"
+                                    className="border-gray-350 text-[#7986CB] focus:ring-[#7986CB] rounded mt-0.5 h-4 w-4 bg-transparent cursor-pointer"
                                 />
                                 <div className="space-y-1 leading-none">
-                                    <label htmlFor="acceptTerms" className="text-xs text-gray-500 leading-relaxed font-medium cursor-pointer select-none">
+                                    <label htmlFor="acceptTerms" className="text-[11px] text-gray-550 leading-relaxed font-medium cursor-pointer select-none">
                                         <Link href="/terms" className="text-[#7986CB] hover:underline font-semibold">Kullanıcı Sözleşmesini</Link> ve{" "}
                                         <Link href="/privacy" className="text-[#7986CB] hover:underline font-semibold">Gizlilik Politikasını</Link> kabul ediyorum.
                                     </label>
@@ -319,7 +295,7 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                             <Button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full h-11 mt-3 bg-[#7986CB] hover:bg-[#6C75BD] active:scale-[0.98] text-white font-bold tracking-wider uppercase text-xs rounded-full shadow-[0_4px_25px_rgba(121,134,203,0.25)] transition-all flex items-center justify-center gap-2"
+                                className="w-full h-11 mt-2 bg-[#7986CB] hover:bg-[#6C75BD] active:scale-[0.98] text-white font-bold tracking-wider uppercase text-xs rounded-full shadow-[0_4px_25px_rgba(121,134,203,0.2)] transition-all flex items-center justify-center gap-2"
                             >
                                 {isLoading ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -331,25 +307,64 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                     )}
 
                     {/* Divider & Google Login */}
-                    <div className="relative my-5">
+                    <div className="relative my-6">
                         <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-gray-200/80" />
+                            <span className="w-full border-t border-gray-200/60" />
                         </div>
                         <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-gray-400">
-                            <span className="bg-white px-3 rounded-full">Veya</span>
+                            <span className="bg-[#FAFBFD] px-3 rounded-full">Veya</span>
                         </div>
                     </div>
 
+                    {/* Google Login Button - Standard Branded White Theme */}
                     <Button
                         type="button"
                         onClick={() => signIn("google", { callbackUrl: "/wardrobe" })}
-                        className="w-full h-11 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold text-xs rounded-xl flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] shadow-sm hover:shadow"
+                        className="w-full h-12 bg-white border border-gray-200/80 hover:bg-gray-50/80 text-gray-700 font-semibold text-sm rounded-2xl flex items-center justify-center gap-3 transition-all active:scale-[0.98] shadow-sm hover:shadow-md hover:border-gray-300"
                     >
-                        <svg className="h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                            <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.56h3.29c1.92,-1.77 3.02,-4.38 3.02,-7.4C21.65,11.75 21.5,11.4 21.35,11.1z" fill="#4285F4" />
+                            <path d="M12,20.6c2.43,0 4.47,-0.8 5.96,-2.2l-2.92,-2.26c-0.81,0.54 -1.85,0.86 -3.04,0.86c-2.34,0 -4.32,-1.58 -5.02,-3.7H3.6v2.64C5.08,18.84 8.3,20.6 12,20.6z" fill="#34A853" />
+                            <path d="M6.98,13.3c-0.18,-0.54 -0.28,-1.11 -0.28,-1.7s0.1,-1.16 0.28,-1.7V7.26H3.6C3,8.45 2.65,9.85 2.65,11.3s0.35,2.85 0.95,4.04l2.76,-2.14C6.18,14.6 6.55,13.98 6.98,13.3z" fill="#FBBC05" />
+                            <path d="M12,5.38c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,2.71 14.43,2 12,2C8.3,2 5.08,3.76 3.6,6.66l2.76,2.14C7.06,7.06 9.04,5.38 12,5.38z" fill="#EA4335" />
                         </svg>
-                        Google ile Devam Et
+                        Google ile Giriş Yap
                     </Button>
+
+                    {/* Bottom Navigation Link */}
+                    <div className="mt-8 text-center text-xs text-gray-500 font-medium">
+                        {mode === "login" ? (
+                            <>
+                                Hesabınız yok mu?{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setMode("register");
+                                        setAuthError(null);
+                                        router.push("/register");
+                                    }}
+                                    className="text-[#7986CB] hover:underline font-bold ml-1"
+                                >
+                                    Kayıt Olun
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                Zaten üye misiniz?{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setMode("login");
+                                        setAuthError(null);
+                                        router.push("/login");
+                                    }}
+                                    className="text-[#7986CB] hover:underline font-bold ml-1"
+                                >
+                                    Giriş Yapın
+                                </button>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 

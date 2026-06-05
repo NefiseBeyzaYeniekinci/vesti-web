@@ -22,80 +22,6 @@ const categoryDefaults: Record<string, string> = {
     'TAKIMLAR': 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500',
 };
 
-// Rich high-fidelity mock dataset including different sets/suits (Takımlar) with sub-personalization tags
-const MOCK_CLOTHES: ClothingItem[] = [
-    {
-        id: "mock-1",
-        userId: "mock-user",
-        category: "Tişört",
-        color: "Beyaz",
-        brand: "Tişört",
-        season: ["Basic", "Oversize", "Polo"],
-        imageUrl: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500", // Basic white tee on model (Image 2)
-        createdAt: new Date().toISOString(),
-    },
-    {
-        id: "mock-2",
-        userId: "mock-user",
-        category: "Gömlek",
-        color: "Açık Mavi",
-        brand: "Gömlek",
-        season: ["Classic", "Oversize"],
-        imageUrl: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500",
-        createdAt: new Date().toISOString(),
-    },
-    {
-        id: "mock-3",
-        userId: "mock-user",
-        category: "Ceket",
-        color: "Siyah",
-        brand: "Ceket",
-        season: ["Deri", "Oversize"],
-        imageUrl: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500",
-        createdAt: new Date().toISOString(),
-    },
-    {
-        id: "mock-4",
-        userId: "mock-user",
-        category: "Pantolon",
-        color: "Koyu Mavi",
-        brand: "Pantolon",
-        season: ["Jean", "Slim Fit"],
-        imageUrl: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=500",
-        createdAt: new Date().toISOString(),
-    },
-    {
-        id: "mock-5",
-        userId: "mock-user",
-        category: "Ayakkabı",
-        color: "Kahverengi",
-        brand: "Ayakkabı",
-        season: ["Casual", "Sneaker"],
-        imageUrl: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500",
-        createdAt: new Date().toISOString(),
-    },
-    // SUITS & SETS (Takımlar) with sub-personalization tags (Blazer Takım, Takım Elbise, Eşofman, Cinsiyet, vb.)
-    {
-        id: "mock-6",
-        userId: "mock-user",
-        category: "Takımlar",
-        color: "Bej",
-        brand: "Blazer Takım",
-        season: ["Blazer Takım", "Kadın"],
-        imageUrl: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=500", // Women blazer set
-        createdAt: new Date().toISOString(),
-    },
-    {
-        id: "mock-8",
-        userId: "mock-user",
-        category: "Takımlar",
-        color: "Gri",
-        brand: "Eşofman Takımı",
-        season: ["Eşofman Takımı", "Casual"],
-        imageUrl: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500", // Tracksuit set
-        createdAt: new Date().toISOString(),
-    }
-];
 
 export default function WardrobePage() {
     const language = useClientLanguage();
@@ -123,15 +49,10 @@ export default function WardrobePage() {
         queryFn: wardrobeApi.getAll,
     });
 
-    // Merge database clothes with realistic high-fidelity mock items
-    const clothes = dbClothes ? [...dbClothes, ...MOCK_CLOTHES] : MOCK_CLOTHES;
+    const clothes = dbClothes || [];
 
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
-            if (id.startsWith("mock-")) {
-                // Instantly resolve for mock data to allow seamless testing
-                return;
-            }
             await wardrobeApi.delete(id);
         },
         onSuccess: () => {
@@ -357,7 +278,7 @@ export default function WardrobePage() {
                                         <Trash2 className="w-4 h-4" />
                                     </button>
 
-                                    <Link href={item.id.startsWith("mock-") ? "#" : `/wardrobe/${item.id}`} prefetch={true}>
+                                    <Link href={`/wardrobe/${item.id}`} prefetch={true}>
                                         <div className="vesti-card cursor-pointer flex flex-col h-full bg-white">
                                             <div className="relative h-[240px] w-full bg-gray-50 overflow-hidden">
                                                 <Image
