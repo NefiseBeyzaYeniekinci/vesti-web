@@ -78,6 +78,7 @@ export function SwapOfferModal({ sellerId, listingId, sellerName, itemTitle }: S
     const [open, setOpen] = useState(false);
     const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
     const [customMessage, setCustomMessage] = useState("");
+    const [agreeToTerms, setAgreeToTerms] = useState(false);
     const [sending, setSending] = useState(false);
     
     // In-modal category filter state (defaults to null for performance and UX focus)
@@ -178,6 +179,7 @@ export function SwapOfferModal({ sellerId, listingId, sellerName, itemTitle }: S
                 setSelectedItemId(null);
                 setCustomMessage("");
                 setModalCategoryFilter(null);
+                setAgreeToTerms(false);
             }
         }}>
             <DialogTrigger asChild>
@@ -300,11 +302,30 @@ export function SwapOfferModal({ sellerId, listingId, sellerName, itemTitle }: S
                             className="py-6 rounded-xl"
                         />
                     </div>
+
+                    <div className="flex items-start gap-2 pt-2">
+                        <input
+                            type="checkbox"
+                            id="swap-terms-agree"
+                            checked={agreeToTerms}
+                            onChange={(e) => setAgreeToTerms(e.target.checked)}
+                            className="mt-1 w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer shrink-0"
+                        />
+                        <label htmlFor="swap-terms-agree" className="text-xs text-gray-500 cursor-pointer select-none leading-relaxed">
+                            {language === "en" 
+                                ? "I have read and agree to the " 
+                                : "Veti'nin hazırladığı yasal bağlayıcılığı olan "}
+                            <a href="/swap-agreement" target="_blank" className="text-purple-600 dark:text-purple-400 hover:underline font-semibold">
+                                {language === "en" ? "Swap & Safety Agreement" : "Takas ve Güvenlik Sözleşmesi"}
+                            </a>
+                            {language === "en" ? "." : "'ni okudum ve onaylıyorum. Vazgeçmem halinde cezai şartları kabul ederim."}
+                        </label>
+                    </div>
                 </div>
 
                 <Button
                     onClick={handleSendSwapOffer}
-                    disabled={sending || !selectedItemId}
+                    disabled={sending || !selectedItemId || !agreeToTerms}
                     className="w-full bg-[#7986CB] hover:bg-[#6875b8] text-white font-semibold py-6 rounded-xl mt-4 transition-colors"
                 >
                     {sending ? (

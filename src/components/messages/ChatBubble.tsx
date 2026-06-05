@@ -96,31 +96,40 @@ export function ChatBubble({ message, isMine }: Props) {
                     Karşı tarafın teklifinizi incelemesi bekleniyor.
                   </p>
                 ) : (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleSwapAction("accept")}
-                      disabled={processing}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-1 transition-colors active:scale-[0.98]"
-                    >
-                      {processing ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Check className="w-3.5 h-3.5" />
-                      )}
-                      Kabul Et
-                    </button>
-                    <button
-                      onClick={() => handleSwapAction("reject")}
-                      disabled={processing}
-                      className="flex-1 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 disabled:opacity-50 text-xs font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-1 border border-rose-200 dark:border-rose-900/30 transition-colors active:scale-[0.98]"
-                    >
-                      {processing ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <X className="w-3.5 h-3.5" />
-                      )}
-                      Reddet
-                    </button>
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSwapAction("accept")}
+                        disabled={processing}
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-1 transition-colors active:scale-[0.98]"
+                      >
+                        {processing ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Check className="w-3.5 h-3.5" />
+                        )}
+                        Kabul Et
+                      </button>
+                      <button
+                        onClick={() => handleSwapAction("reject")}
+                        disabled={processing}
+                        className="flex-1 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 disabled:opacity-50 text-xs font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-1 border border-rose-200 dark:border-rose-900/30 transition-colors active:scale-[0.98]"
+                      >
+                        {processing ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <X className="w-3.5 h-3.5" />
+                        )}
+                        Reddet
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 leading-normal text-center">
+                      Onaylayarak yasal bağlayıcılığı olan{" "}
+                      <a href="/swap-agreement" target="_blank" className="text-purple-600 dark:text-purple-400 underline font-semibold">
+                        Takas Sözleşmesi
+                      </a>{" "}
+                      ve cayma cezalarını kabul etmiş olursunuz.
+                    </p>
                   </div>
                 )}
               </div>
