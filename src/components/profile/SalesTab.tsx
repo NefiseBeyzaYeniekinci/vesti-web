@@ -111,34 +111,39 @@ export function SalesTab() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6 flex flex-col justify-between items-start gap-4">
-          <div className="p-3.5 bg-emerald-50 rounded-2xl">
-            <TrendingUp className="w-6 h-6 text-emerald-500" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Card 1 */}
+        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 flex items-center gap-4">
+          <div className="p-3 bg-emerald-50 rounded-xl shrink-0">
+            <TrendingUp className="w-6 h-6 text-emerald-600" />
           </div>
-          <div>
-            <p className="text-sm text-gray-500 font-medium mb-1">{t.totalEarned}</p>
-            <p className="text-3xl font-extrabold text-vesti-dark">{totalEarned.toLocaleString("tr-TR")} ₺</p>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6 flex flex-col justify-between items-start gap-4">
-          <div className="p-3.5 bg-sky-50 rounded-2xl">
-            <Clock className="w-6 h-6 text-sky-500" />
-          </div>
-          <div>
-            <p className="text-sm text-gray-500 font-medium mb-1">{t.pendingPayment}</p>
-            <p className="text-3xl font-extrabold text-vesti-dark">{pendingEarnings.toLocaleString("tr-TR")} ₺</p>
+          <div className="min-w-0">
+            <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">{t.totalEarned}</p>
+            <p className="text-xl font-bold text-gray-800 mt-0.5 whitespace-nowrap">{totalEarned.toLocaleString("tr-TR")} ₺</p>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6 flex flex-col justify-between items-start gap-4">
-          <div className="p-3.5 bg-purple-50 rounded-2xl">
-            <CheckCircle2 className="w-6 h-6 text-purple-500" />
+        {/* Card 2 */}
+        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 flex items-center gap-4">
+          <div className="p-3 bg-sky-50 rounded-xl shrink-0">
+            <Clock className="w-6 h-6 text-sky-600" />
           </div>
-          <div>
-            <p className="text-sm text-gray-500 font-medium mb-1">{t.totalSales}</p>
-            <p className="text-3xl font-extrabold text-vesti-dark">{orders.length} <span className="text-lg text-gray-400 font-semibold">{t.items}</span></p>
+          <div className="min-w-0">
+            <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">{t.pendingPayment}</p>
+            <p className="text-xl font-bold text-gray-800 mt-0.5 whitespace-nowrap">{pendingEarnings.toLocaleString("tr-TR")} ₺</p>
+          </div>
+        </div>
+
+        {/* Card 3 */}
+        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-5 flex items-center gap-4">
+          <div className="p-3 bg-purple-50 rounded-xl shrink-0">
+            <CheckCircle2 className="w-6 h-6 text-purple-600" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">{t.totalSales}</p>
+            <p className="text-xl font-bold text-gray-800 mt-0.5 whitespace-nowrap">
+              {orders.length} <span className="text-xs text-gray-400 font-normal">{t.items}</span>
+            </p>
           </div>
         </div>
       </div>
@@ -187,9 +192,9 @@ export function SalesTab() {
                     <p className="text-sm font-bold text-sky-800 mb-3 flex items-center gap-2">
                       <Truck className="w-4 h-4" /> {t.enterTracking}
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col md:flex-row gap-3 w-full">
                       <select
-                        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vesti-primary sm:w-48 font-medium text-gray-700"
+                        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vesti-primary w-full md:w-48 font-medium text-gray-700"
                         value={input.carrier}
                         onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: { ...input, carrier: e.target.value } }))}
                       >
@@ -199,13 +204,13 @@ export function SalesTab() {
                       <input
                         type="text"
                         placeholder={t.trackingNum}
-                        className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vesti-primary font-medium text-gray-700"
+                        className="w-full md:flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vesti-primary font-medium text-gray-700"
                         value={input.number}
                         onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: { ...input, number: e.target.value } }))}
                       />
                       <Button
                         size="sm"
-                        className="bg-vesti-primary hover:bg-vesti-dark text-white rounded-xl px-6 py-2.5 h-auto font-semibold"
+                        className="w-full md:w-auto bg-vesti-primary hover:bg-vesti-dark text-white rounded-xl px-6 py-2.5 h-auto font-semibold shrink-0"
                         disabled={!!submitting}
                         onClick={() => handleShip(order.id)}
                       >
