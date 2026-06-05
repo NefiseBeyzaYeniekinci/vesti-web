@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
     // Şifreyi doğrula (Google girişlerinde şifre kontrolünü atlayıp doğrudan oturum açtırıyoruz)
     if (password !== "google_oauth_pass") {
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      const isPasswordValid = await bcrypt.compare(password, user.password || "");
       if (!isPasswordValid) {
         return NextResponse.json(
           { message: "Hatalı e-posta veya şifre" },

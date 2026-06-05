@@ -1124,84 +1124,130 @@ export default async function HomePage() {
                     </Link>
                 </div>
 
-                {/* Horizontal Scroll Cards */}
-                <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '16px', paddingBottom: '8px' }}>
-                    {mockMarketplaceItems.map((item) => (
-                        <div
-                            key={item.id}
-                            className="vesti-card"
-                            style={{ minWidth: '200px', width: '200px', flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-                        >
-                            {/* Görsel */}
-                            <div style={{ height: '220px', position: 'relative', overflow: 'hidden', backgroundColor: '#E8E6E0' }}>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
-                                />
-                                {/* Eşleşme rozeti — sağ üst, koyu zemin beyaz metin */}
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '10px',
-                                    right: '10px',
-                                    backgroundColor: '#29294D',
-                                    color: '#ffffff',
-                                    fontSize: '10px',
-                                    fontWeight: 600,
-                                    letterSpacing: '0.04em',
-                                    padding: '4px 8px',
-                                    borderRadius: '4px',
-                                }}>
-                                    %{item.matchPct}
-                                </div>
-                            </div>
-
-                            {/* İçerik */}
-                            <div style={{ padding: '14px 16px 18px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                                <div>
-                                    <h3 style={{
-                                        fontSize: '13px',
-                                        fontWeight: 500,
-                                        color: '#1a1a18',
-                                        margin: '0 0 4px',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap',
-                                    }}>
-                                        {item.name}
-                                    </h3>
-                                    <p style={{
-                                        fontSize: '15px',
+                {/* Horizontal Scroll Cards or Empty State */}
+                {totalCount === 0 ? (
+                    <div style={{
+                        padding: '32px 24px',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: '24px',
+                        border: '0.5px dashed #E0E3E8',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '12px',
+                        boxShadow: '0 2px 12px rgba(0,0,0,0.01)'
+                    }}>
+                        <p style={{
+                            fontSize: '13px',
+                            color: '#607080',
+                            margin: 0,
+                            maxWidth: '460px',
+                            lineHeight: 1.6
+                        }}>
+                            {language === 'en'
+                                ? 'Since there are no clothes in your wardrobe yet, we cannot display selections matching your style. Once you add clothes, we will analyze your style and recommend marketplace items!'
+                                : 'Dolabınızda henüz kıyafet bulunmadığı için tarzınıza özel seçimler sunulamamaktadır. Kıyafet ekledikten sonra kişisel tarz analiziniz yapılacak ve uygun marketplace ürünleri burada listelenecektir.'}
+                        </p>
+                        <Link href="/wardrobe" style={{ textDecoration: 'none' }}>
+                            <span style={{
+                                display: 'inline-block',
+                                fontSize: '11px',
+                                fontWeight: 750,
+                                letterSpacing: '0.05em',
+                                textTransform: 'uppercase',
+                                color: '#ffffff',
+                                backgroundColor: '#7986CB',
+                                padding: '8px 20px',
+                                borderRadius: '999px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                boxShadow: '0 2px 10px rgba(121,134,203,0.2)'
+                            }}>
+                                {language === 'en' ? 'Add Clothes' : 'Kıyafet Ekle'}
+                            </span>
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="hide-scrollbar" style={{ display: 'flex', overflowX: 'auto', gap: '16px', paddingBottom: '8px' }}>
+                        {mockMarketplaceItems.map((item) => (
+                            <div
+                                key={item.id}
+                                className="vesti-card"
+                                style={{ minWidth: '200px', width: '200px', flexShrink: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+                            >
+                                {/* Görsel */}
+                                <div style={{ height: '220px', position: 'relative', overflow: 'hidden', backgroundColor: '#E8E6E0' }}>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={item.image}
+                                        alt={item.name}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease' }}
+                                    />
+                                    {/* Eşleşme rozeti — sağ üst, koyu zemin beyaz metin */}
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '10px',
+                                        right: '10px',
+                                        backgroundColor: '#29294D',
+                                        color: '#ffffff',
+                                        fontSize: '10px',
                                         fontWeight: 600,
-                                        color: '#1a1a18',
-                                        margin: 0,
+                                        letterSpacing: '0.04em',
+                                        padding: '4px 8px',
+                                        borderRadius: '4px',
                                     }}>
-                                        {item.price}
-                                    </p>
+                                        %{item.matchPct}
+                                    </div>
                                 </div>
-                                <Link href="/marketplace" style={{ marginTop: '12px', display: 'block' }}>
-                                    <button style={{
-                                        width: '100%',
-                                        padding: '8px 0',
-                                        fontSize: '11px',
-                                        fontWeight: 500,
-                                        letterSpacing: '0.06em',
-                                        textTransform: 'uppercase',
-                                        backgroundColor: 'transparent',
-                                        color: '#37474F',
-                                        border: '0.5px solid #E0E3E8',
-                                        borderRadius: '6px',
-                                        cursor: 'pointer',
-                                        transition: 'border-color 0.2s, color 0.2s',
-                                    }}>
-                                        {t.inspect}
-                                    </button>
-                                </Link>
+
+                                {/* İçerik */}
+                                <div style={{ padding: '14px 16px 18px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <h3 style={{
+                                            fontSize: '13px',
+                                            fontWeight: 500,
+                                            color: '#1a1a18',
+                                            margin: '0 0 4px',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis',
+                                            whiteSpace: 'nowrap',
+                                        }}>
+                                            {item.name}
+                                        </h3>
+                                        <p style={{
+                                            fontSize: '15px',
+                                            fontWeight: 600,
+                                            color: '#1a1a18',
+                                            margin: 0,
+                                        }}>
+                                            {item.price}
+                                        </p>
+                                    </div>
+                                    <Link href="/marketplace" style={{ marginTop: '12px', display: 'block' }}>
+                                        <button style={{
+                                            width: '100%',
+                                            padding: '8px 0',
+                                            fontSize: '11px',
+                                            fontWeight: 500,
+                                            letterSpacing: '0.06em',
+                                            textTransform: 'uppercase',
+                                            backgroundColor: 'transparent',
+                                            color: '#37474F',
+                                            border: '0.5px solid #E0E3E8',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            transition: 'border-color 0.2s, color 0.2s',
+                                        }}>
+                                            {t.inspect}
+                                        </button>
+                                    </Link>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </section>
         </div>
     );

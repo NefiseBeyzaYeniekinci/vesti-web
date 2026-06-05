@@ -40,6 +40,8 @@ export default function MarketplacePage() {
         clearFilters: language === "en" ? "Clear filters" : "Filtreleri temizle",
     };
 
+    const [favoritedListingIds, setFavoritedListingIds] = useState<string[]>([]);
+
     // Manual debounce for search
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(searchQuery), 400);
@@ -62,9 +64,28 @@ export default function MarketplacePage() {
         }
     }, [debouncedSearch, activeCategory, swapOnly]);
 
+    const fetchFavorites = useCallback(async () => {
+        if (!isAuthenticated) return;
+        try {
+            const res = await fetch("/api/favorites");
+            if (res.ok) {
+                const json = await res.json();
+                if (json.success && Array.isArray(json.data)) {
+                    setFavoritedListingIds(json.data.map((fav: any) => fav.listingId));
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching favorites:", error);
+        }
+    }, [isAuthenticated]);
+
     useEffect(() => {
         fetchItems();
     }, [fetchItems]);
+
+    useEffect(() => {
+        fetchFavorites();
+    }, [fetchFavorites]);
 
     return (
         <div className="space-y-8 pb-8">
@@ -143,7 +164,11 @@ export default function MarketplacePage() {
             ) : items.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                     {items.map((item) => (
-                        <ProductCard key={item.id} item={item} />
+                        <ProductCard 
+                            key={item.id} 
+                            item={item} 
+                            initialIsFavorited={favoritedListingIds.includes(item.id)} 
+                        />
                     ))}
                 </div>
             ) : (

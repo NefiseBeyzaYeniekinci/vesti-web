@@ -65,12 +65,14 @@ export default function WardrobePage() {
     });
 
     // DYNAMIC CATEGORIES GENERATION:
-    // Automatically find all unique categories present in the clothes array!
-    const uniqueCategoriesList: string[] = [];
+    // Standard categories that should always exist, plus any additional user-created ones.
+    const STANDARD_CATEGORIES = ["Tişört", "Gömlek", "Ceket", "Pantolon", "Ayakkabı", "Elbise", "Takımlar"];
+    const uniqueCategoriesList: string[] = [...STANDARD_CATEGORIES];
+    
     clothes.forEach(item => {
         const cat = item.category.trim();
         const formatted = cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
-        if (formatted && !uniqueCategoriesList.includes(formatted)) {
+        if (formatted && !uniqueCategoriesList.some(c => c.toLowerCase() === formatted.toLowerCase())) {
             uniqueCategoriesList.push(formatted);
         }
     });
@@ -80,11 +82,16 @@ export default function WardrobePage() {
         const items = clothes.filter(item => 
             item.category.trim().toUpperCase() === catName.toUpperCase()
         );
+        
+        // Map category display name to default keys
+        let defaultKey = catName.toUpperCase();
+        if (defaultKey === "CEKET") defaultKey = "CEKET";
+        
         return {
             name: catName,
             count: items.length,
             // Prefer cover fallback images if defined, otherwise dynamically use the user's actual uploaded item image!
-            latestImage: categoryDefaults[catName.toUpperCase()] || items[0]?.imageUrl || 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500'
+            latestImage: categoryDefaults[defaultKey] || items[0]?.imageUrl || 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500'
         };
     });
 
@@ -256,8 +263,25 @@ export default function WardrobePage() {
 
                     {/* Category Items Grid */}
                     {displayedClothes.length === 0 ? (
-                        <div className="text-center py-16 text-gray-400">
-                            {language === "en" ? "No items in this sub-tag." : "Bu etikette kıyafet bulunmuyor."}
+                        <div className="flex flex-col items-center justify-center text-center py-16 px-6 bg-white border-2 border-dashed border-gray-200 rounded-[24px] gap-4 max-w-md mx-auto shadow-sm">
+                            <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500">
+                                <Plus className="w-6 h-6" />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="font-semibold text-gray-900">
+                                    {language === "en" ? "Category is Empty" : "Bu Kategoride Kıyafet Yok"}
+                                </h3>
+                                <p className="text-xs text-gray-500 max-w-xs leading-relaxed">
+                                    {language === "en" 
+                                        ? "You haven't added any clothes here yet. Would you like to add one now?" 
+                                        : "Bu kategoride henüz hiçbir kıyafetiniz bulunmuyor. Şimdi yeni bir parça eklemek ister misiniz?"}
+                                </p>
+                            </div>
+                            <AddClothingModal trigger={
+                                <button className="px-5 py-2.5 bg-[#7986CB] hover:bg-[#6875b8] text-white text-xs font-bold tracking-wider uppercase rounded-full shadow-[0_4px_15px_rgba(121,134,203,0.2)] transition-all active:scale-[0.98]">
+                                    {language === "en" ? "Add Clothing" : "Kıyafet Ekle"}
+                                </button>
+                            } />
                         </div>
                     ) : (
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
