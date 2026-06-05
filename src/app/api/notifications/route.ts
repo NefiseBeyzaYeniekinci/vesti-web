@@ -54,10 +54,13 @@ export async function GET() {
       });
     }
 
-    // 2. Son sipariş eventleri (alıcı olarak)
+    // 2. Son sipariş eventleri (alıcı veya satıcı olarak)
     const recentOrderEvents = await prisma.trackingEvent.findMany({
       where: {
-        order: { buyerId: userId },
+        OR: [
+          { order: { buyerId: userId } },
+          { order: { sellerId: userId } },
+        ],
         createdAt: {
           gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // son 7 gün
         },
@@ -66,15 +69,17 @@ export async function GET() {
         order: {
           select: {
             id: true,
+            buyerId: true,
+            sellerId: true,
             listing: { select: { title: true } },
           },
         },
       },
       orderBy: { createdAt: "desc" },
-      take: 3,
+      take: 6,
     });
 
-    const statusLabels: Record<string, string> = {
+    const statusLabelsBuyer: Record<string, string> = {
       pending: "Sipariş alındı, onay bekleniyor.",
       paid: "Ödemeniz alındı!",
       shipped: "Kargonuz yola çıktı!",
@@ -82,15 +87,33 @@ export async function GET() {
       cancelled: "Siparişiniz iptal edildi.",
     };
 
+    const statusLabelsSeller: Record<string, string> = {
+      pending: "Ürününüz için sipariş oluşturuldu.",
+      paid: "Ürününüz Satıldı!",
+      shipped: "Ürününüz kargoya verildi.",
+      delivered: "Ürününüz alıcıya teslim edildi.",
+      cancelled: "Sipariş iptal edildi.",
+    };
+
     for (const event of recentOrderEvents) {
       const listingTitle = event.order.listing?.title ?? "Ürün";
+      const isSeller = event.order.sellerId === userId;
+      
+      const title = isSeller 
+        ? (statusLabelsSeller[event.status] ?? "Satış Güncellendi")
+        : (statusLabelsBuyer[event.status] ?? "Sipariş Güncellendi");
+
+      const description = isSeller && event.status === "paid"
+        ? `"${listingTitle}" satıldı. Lütfen en kısa sürede kargolayın.`
+        : `"${listingTitle}" — ${event.description}`;
+
       notifications.push({
         id: `order-${event.id}`,
-        title: statusLabels[event.status] ?? "Sipariş Güncellendi",
-        description: `"${listingTitle}" — ${event.description}`,
+        title,
+        description,
         type: event.status === "paid" ? "payment" : "order",
         href: `/profile`,
-        read: true, // sipariş eventleri baştan okunmuş sayılır
+        read: !isSeller, // Satıcı için önemli aksiyonlar (satış gibi) ilk başta okunmamış düşsün, alıcı eventleri baştan okunmuş sayılır
         createdAt: event.createdAt.toISOString(),
       });
     }

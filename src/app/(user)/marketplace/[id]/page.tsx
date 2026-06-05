@@ -128,8 +128,13 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
                                 </div>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                {isLoggedIn ? (
+                            <div className="flex flex-col sm:flex-row gap-3 w-full">
+                                {isLoggedIn && session?.user?.id === item.seller.id ? (
+                                    <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 text-center">
+                                        <p className="text-sm font-semibold text-slate-800">Bu sizin kendi ilanınızdır.</p>
+                                        <p className="text-xs text-slate-500 mt-1">Kendi ilanıza sipariş veremez, mesaj atamaz veya takas teklifi gönderemezsiniz.</p>
+                                    </div>
+                                ) : isLoggedIn ? (
                                     <>
                                         <Link href={`/checkout/${item.id}`} className="flex-1">
                                             <button className="w-full bg-indigo-600 text-white font-medium py-3.5 px-6 rounded-xl hover:bg-indigo-700 transition-colors shadow-sm active:scale-[0.98]">
