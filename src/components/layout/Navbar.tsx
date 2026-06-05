@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { NotificationsDropdown } from "./NotificationsDropdown";
 import { cookies } from "next/headers";
 import { LogoutButton } from "./LogoutButton";
+import { MobileMenuButton } from "./MobileMenuButton";
 
 export async function Navbar() {
     const session = await auth();
@@ -20,9 +21,7 @@ export async function Navbar() {
             style={{ borderBottom: '0.5px solid #E0E3E8' }}
         >
             <div className="flex items-center gap-4">
-                <button className="md:hidden text-vesti-text/60">
-                    <Menu className="w-5 h-5" />
-                </button>
+                <MobileMenuButton />
                 <Link
                     href={session?.user ? "/home" : "/"}
                     prefetch={true}
