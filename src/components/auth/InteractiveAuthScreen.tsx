@@ -93,6 +93,15 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
         }
     }
 
+    const handleForgotPassword = () => {
+        const email = loginForm.getValues("email");
+        if (!email) {
+            alert("Lütfen önce e-posta adresinizi giriniz.");
+            return;
+        }
+        alert(`${email} adresine şifre sıfırlama bağlantısı gönderildi!`);
+    };
+
     // Submitting Register
     async function onRegisterSubmit(data: RegisterFormData) {
         setIsLoading(true);
@@ -195,9 +204,18 @@ export default function InteractiveAuthScreen({ initialMode = "login" }: Interac
                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
                                 </div>
-                                {loginForm.formState.errors.password && (
-                                    <span className="text-red-500 text-xs mt-1 block ml-1">{loginForm.formState.errors.password.message}</span>
-                                )}
+                                <div className="flex justify-between items-center mt-2 px-1">
+                                    {loginForm.formState.errors.password ? (
+                                        <span className="text-red-500 text-xs block">{loginForm.formState.errors.password.message}</span>
+                                    ) : <div />}
+                                    <button
+                                        type="button"
+                                        onClick={handleForgotPassword}
+                                        className="text-xs text-[#7986CB] hover:text-[#5E6BB2] font-semibold hover:underline transition-all"
+                                    >
+                                        Şifremi Unuttum
+                                    </button>
+                                </div>
                             </div>
 
                             <Button

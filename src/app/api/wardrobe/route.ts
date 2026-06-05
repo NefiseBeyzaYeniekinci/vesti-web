@@ -24,6 +24,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       id: item.id,
       userId: item.userId,
+      name: item.name,
       imageUrl: item.imageUrl ?? "",
       category: item.category,
       color: item.color ?? "",
@@ -43,6 +44,7 @@ export async function GET(req: Request) {
   const formatted = items.map((item) => ({
     id: item.id,
     userId: item.userId,
+    name: item.name,
     imageUrl: item.imageUrl ?? "",
     category: item.category,
     color: item.color ?? "",

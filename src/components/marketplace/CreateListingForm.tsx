@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createListingSchema, CreateListingInput } from '@/lib/validations/marketplace';
-import { Tag, ArrowRightLeft, UploadCloud, X } from 'lucide-react';
+import { Tag, ArrowRightLeft, UploadCloud, X, Sparkles } from 'lucide-react';
+import { ClothingItem } from '@/lib/api/wardrobe.api';
 
 const STEPS = ['Temel Bilgiler', 'Detaylar & Fotoğraf', 'Fiyat & Takas'];
 
@@ -12,6 +13,8 @@ export function CreateListingForm() {
     const [currentStep, setCurrentStep] = useState(0);
     const [uploadedImages, setUploadedImages] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [wardrobeItems, setWardrobeItems] = useState<ClothingItem[]>([]);
+    const [isWardrobeModalOpen, setIsWardrobeModalOpen] = useState(false);
 
     const {
         register,
@@ -28,6 +31,41 @@ export function CreateListingForm() {
         },
         mode: 'onChange'
     });
+
+    useEffect(() => {
+        fetch("/api/wardrobe")
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    setWardrobeItems(data);
+                }
+            })
+            .catch(err => console.error("Error fetching wardrobe items:", err));
+    }, []);
+
+    const selectFromWardrobe = (item: ClothingItem) => {
+        setValue('title', item.brand ? `${item.brand} ${item.name || ""}` : item.name || "", { shouldValidate: true });
+        
+        let mappedCategory = "";
+        const c = item.category.trim().toUpperCase();
+        if (c === "TİŞÖRT" || c === "TSHIRT") mappedCategory = "TİŞÖRT";
+        else if (c === "PANTOLON") mappedCategory = "PANTOLON";
+        else if (c === "CEKET" || c === "DIŞ GİYİM" || c === "DIŞ_GİYİM") mappedCategory = "DIŞ_GİYİM";
+        else if (c === "AYAKKABI") mappedCategory = "AYAKKABI";
+        else mappedCategory = "DİĞER";
+        
+        setValue('category', mappedCategory, { shouldValidate: true });
+        setValue('brand', item.brand || "Diğer", { shouldValidate: true });
+        setValue('size', item.size || "M", { shouldValidate: true });
+        setValue('description', `${item.brand || "Vesti"} marka ${item.name || ""} modeli. Dijital gardırobumdan çıkardığım temiz üründür.`, { shouldValidate: true });
+        
+        if (item.imageUrl) {
+            setUploadedImages([item.imageUrl]);
+            setValue('images', [item.imageUrl], { shouldValidate: true });
+        }
+        
+        setIsWardrobeModalOpen(false);
+    };
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const watchIsSwapOpen = watch('isSwapOpen');
@@ -52,12 +90,34 @@ export function CreateListingForm() {
     const onSubmit = async (data: CreateListingInput) => {
         setIsSubmitting(true);
         try {
-            // Mock API Call
-            console.log('Form verisi:', data);
-            alert('İlan başarıyla oluşturuldu! (Mock)');
-            window.location.href = '/marketplace';
+            const res = await fetch("/api/marketplace/items", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    title: data.title,
+                    description: data.description,
+                    price: data.price,
+                    images: data.images,
+                    category: data.category,
+                    size: data.size,
+                    condition: data.condition,
+                    brand: data.brand,
+                    isSwapOpen: data.isSwapOpen
+                })
+            });
+
+            if (res.ok) {
+                alert('İlanınız başarıyla oluşturuldu!');
+                window.location.href = '/marketplace';
+            } else {
+                const err = await res.json().catch(() => ({}));
+                alert(err.message || 'İlan oluşturulurken bir hata oluştu.');
+            }
         } catch (error) {
             console.error(error);
+            alert('Bağlantı hatası oluştu.');
         } finally {
             setIsSubmitting(false);
         }
@@ -109,6 +169,28 @@ export function CreateListingForm() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit as never)} className="px-8 py-8">
+
+                {/* Gardıroptan Seçim Banner'ı */}
+                {currentStep === 0 && (
+                    <div className="mb-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100/50 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                            <h4 className="text-sm font-bold text-indigo-950 flex items-center gap-1.5">
+                                <Sparkles className="w-4 h-4 text-indigo-500 animate-pulse" />
+                                Dijital Gardırobunu Kullan
+                            </h4>
+                            <p className="text-xs text-indigo-700/80 leading-relaxed">
+                                Dolabındaki bir kıyafeti seçerek ilan detaylarını saniyeler içinde otomatik doldurabilirsin!
+                            </p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setIsWardrobeModalOpen(true)}
+                            className="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wider uppercase rounded-full shadow-sm active:scale-95 transition-all shrink-0"
+                        >
+                            Gardırobumdan Seç
+                        </button>
+                    </div>
+                )}
 
                 {/* ADIM 1: Temel Bilgiler */}
                 <div className={currentStep === 0 ? 'block space-y-5' : 'hidden'}>
@@ -309,6 +391,55 @@ export function CreateListingForm() {
                     )}
                 </div>
             </form>
+
+            {isWardrobeModalOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl max-w-xl w-full max-h-[80vh] overflow-hidden shadow-2xl flex flex-col">
+                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                            <h3 className="font-bold text-gray-900 text-lg">Gardırobumdan Kıyafet Seç</h3>
+                            <button 
+                                type="button" 
+                                onClick={() => setIsWardrobeModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-50 transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 overflow-y-auto flex-1">
+                            {wardrobeItems.length === 0 ? (
+                                <div className="text-center py-10 text-gray-500">
+                                    <p className="font-semibold text-sm">Gardırobunuzda kıyafet bulunamadı.</p>
+                                    <p className="text-xs text-gray-400 mt-1">Önce dolap sayfasına gidip kıyafet eklemelisiniz.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    {wardrobeItems.map((item) => (
+                                        <div 
+                                            key={item.id} 
+                                            onClick={() => selectFromWardrobe(item)}
+                                            className="group border border-gray-100 rounded-2xl overflow-hidden cursor-pointer hover:border-indigo-500 hover:shadow-md transition-all bg-gray-50"
+                                        >
+                                            <div className="relative aspect-square w-full bg-gray-100">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img 
+                                                    src={item.imageUrl} 
+                                                    alt={item.name || "Kıyafet"} 
+                                                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                                                />
+                                            </div>
+                                            <div className="p-3">
+                                                <h4 className="font-bold text-gray-900 text-xs truncate">{item.name || "İsimsiz Kıyafet"}</h4>
+                                                <p className="text-[10px] text-gray-500 mt-0.5">{item.brand || "Markasız"} · {item.size || "Bedensiz"}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

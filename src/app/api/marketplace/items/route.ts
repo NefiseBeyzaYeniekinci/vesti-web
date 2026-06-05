@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const { title, description, price, imageUrl, category, size, condition } = body;
+    const { title, description, price, imageUrl, images, category, size, condition, brand, isSwapOpen, allowSwap } = body;
 
     if (!title || !category || price === undefined) {
       return NextResponse.json(
@@ -23,6 +23,18 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    let finalImages: string[] = [];
+    if (Array.isArray(images) && images.length > 0) {
+      finalImages = images;
+    } else if (imageUrl) {
+      finalImages = [imageUrl];
+    } else {
+      // Fallback default image
+      finalImages = ["https://images.unsplash.com/photo-1434389678069-37142cb442ac?w=400"];
+    }
+
+    const swapOpen = typeof isSwapOpen === "boolean" ? isSwapOpen : (typeof allowSwap === "boolean" ? allowSwap : true);
 
     // İlanı oluştur
     const listing = await prisma.listing.create({
@@ -32,10 +44,11 @@ export async function POST(req: Request) {
         description: description ?? "",
         price: parseFloat(price.toString()),
         category,
+        brand: brand ?? "",
         size: size ?? "",
-        condition: condition ?? "new",
-        images: imageUrl ? [imageUrl] : [],
-        allowSwap: true, // Mobil için varsayılan olarak takas açık
+        condition: condition ?? "USED",
+        images: finalImages,
+        allowSwap: swapOpen,
         status: "active",
       },
     });

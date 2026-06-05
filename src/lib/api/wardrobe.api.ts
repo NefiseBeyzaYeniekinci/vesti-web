@@ -2,6 +2,7 @@
 export interface ClothingItem {
     id: string;
     userId: string;
+    name?: string;
     imageUrl: string;
     category: string;
     color: string;
