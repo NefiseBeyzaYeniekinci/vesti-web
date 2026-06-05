@@ -47,7 +47,7 @@ export function ConversationList({ conversations, activeId, currentUserId, langu
             {/* Avatar */}
             <div className="relative flex-shrink-0">
               {other?.avatar ? (
-                <Image
+                <img
                   src={other.avatar}
                   alt={other.name ?? ""}
                   width={44}

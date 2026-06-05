@@ -41,9 +41,9 @@ export function ChatWindow({ conversation, initialMessages, otherUser }: Props) 
         </Link>
 
         {otherUser?.avatar ? (
-          <Image
+          <img
             src={otherUser.avatar}
-            alt={otherUser.name}
+            alt={otherUser.name || ""}
             width={38}
             height={38}
             className="rounded-full object-cover"
