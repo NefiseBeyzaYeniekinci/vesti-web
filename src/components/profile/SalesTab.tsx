@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useClientLanguage } from "@/lib/i18n/client";
 import Image from "next/image";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Order = {
   id: string;
@@ -141,55 +142,63 @@ export function SalesTab() {
     <div className="space-y-6">
       <div className="flex justify-end">
         <Button
-          onClick={() => setShowStats(!showStats)}
+          onClick={() => setShowStats(true)}
           variant="outline"
           className="flex items-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl px-4 py-2 text-xs font-semibold shadow-sm transition-all"
         >
           <BarChart3 className="w-4 h-4 text-vesti-primary" />
-          {showStats 
-            ? (language === "en" ? "Hide Stats" : "İstatistikleri Gizle") 
-            : (language === "en" ? "İstatistikleri Gör" : "İstatistikleri Gör")}
+          {language === "en" ? "Show Stats" : "İstatistikleri Gör"}
         </Button>
       </div>
 
-      {showStats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-in fade-in slide-in-from-top-3 duration-300">
-          {/* Card 1 */}
-          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-3">
-            <div className="p-2.5 bg-emerald-50 rounded-xl shrink-0">
-              <TrendingUp className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{t.totalEarned}</p>
-              <p className="text-lg font-extrabold text-gray-800 mt-0.5 whitespace-nowrap">{totalEarned.toLocaleString("tr-TR")} ₺</p>
-            </div>
-          </div>
+      {/* Stats Modal */}
+      <Dialog open={showStats} onOpenChange={setShowStats}>
+        <DialogContent className="sm:max-w-md rounded-3xl p-6 bg-white dark:bg-gray-900">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-gray-100">
+              <BarChart3 className="w-5 h-5 text-vesti-primary" />
+              {language === "en" ? "Sales & Earnings Stats" : "Satış ve Kazanç İstatistikleri"}
+            </DialogTitle>
+          </DialogHeader>
 
-          {/* Card 2 */}
-          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-3">
-            <div className="p-2.5 bg-sky-50 rounded-xl shrink-0">
-              <Clock className="w-5 h-5 text-sky-600" />
+          <div className="space-y-4 mt-4">
+            {/* Card 1 */}
+            <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-2xl p-4 flex items-center gap-4">
+              <div className="p-3 bg-emerald-100/80 dark:bg-emerald-900/50 rounded-xl shrink-0">
+                <TrendingUp className="w-6 h-6 text-emerald-700 dark:text-emerald-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-emerald-800 dark:text-emerald-400 font-bold uppercase tracking-wider">{t.totalEarned}</p>
+                <p className="text-2xl font-extrabold text-emerald-950 dark:text-emerald-100 mt-0.5 whitespace-nowrap">{totalEarned.toLocaleString("tr-TR")} ₺</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{t.pendingPayment}</p>
-              <p className="text-lg font-extrabold text-gray-800 mt-0.5 whitespace-nowrap">{pendingEarnings.toLocaleString("tr-TR")} ₺</p>
-            </div>
-          </div>
 
-          {/* Card 3 */}
-          <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 flex items-center gap-3">
-            <div className="p-2.5 bg-purple-50 rounded-xl shrink-0">
-              <CheckCircle2 className="w-5 h-5 text-purple-600" />
+            {/* Card 2 */}
+            <div className="bg-sky-50/50 dark:bg-sky-950/20 border border-sky-100 dark:border-sky-900/30 rounded-2xl p-4 flex items-center gap-4">
+              <div className="p-3 bg-sky-100/80 dark:bg-sky-900/50 rounded-xl shrink-0">
+                <Clock className="w-6 h-6 text-sky-700 dark:text-sky-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-sky-800 dark:text-sky-400 font-bold uppercase tracking-wider">{t.pendingPayment}</p>
+                <p className="text-2xl font-extrabold text-sky-950 dark:text-sky-100 mt-0.5 whitespace-nowrap">{pendingEarnings.toLocaleString("tr-TR")} ₺</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider truncate">{t.totalSales}</p>
-              <p className="text-lg font-extrabold text-gray-800 mt-0.5 whitespace-nowrap">
-                {orders.length} <span className="text-xs text-gray-400 font-semibold">{t.items}</span>
-              </p>
+
+            {/* Card 3 */}
+            <div className="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/30 rounded-2xl p-4 flex items-center gap-4">
+              <div className="p-3 bg-purple-100/80 dark:bg-purple-900/50 rounded-xl shrink-0">
+                <CheckCircle2 className="w-6 h-6 text-purple-700 dark:text-purple-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-purple-800 dark:text-purple-400 font-bold uppercase tracking-wider">{t.totalSales}</p>
+                <p className="text-2xl font-extrabold text-purple-950 dark:text-purple-100 mt-0.5 whitespace-nowrap">
+                  {orders.length} <span className="text-sm text-purple-700 dark:text-purple-400 font-bold">{t.items}</span>
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Satış Listesi */}
       {orders.length === 0 ? (
@@ -204,6 +213,11 @@ export function SalesTab() {
             const statusCfg = STATUS_CONFIG[order.status] ?? STATUS_CONFIG.pending;
             const needsShipping = order.status === "paid" && !order.trackingNumber;
             const input = trackingInputs[order.id] ?? { number: "", carrier: "" };
+
+            let maxLength = 30; // default
+            if (input.carrier === "Yurtiçi Kargo" || input.carrier === "MNG Kargo") maxLength = 12;
+            else if (input.carrier === "Aras Kargo" || input.carrier === "PTT Kargo") maxLength = 13;
+            else if (input.carrier === "Sürat Kargo") maxLength = 14;
 
             return (
               <div key={order.id} className="border border-gray-100 rounded-3xl shadow-sm overflow-hidden bg-white hover:shadow-md transition-shadow">
@@ -235,26 +249,38 @@ export function SalesTab() {
                     <p className="text-sm font-bold text-sky-800 mb-3 flex items-center gap-2">
                       <Truck className="w-4 h-4" /> {t.enterTracking}
                     </p>
-                    <div className="flex flex-col lg:flex-row gap-3 w-full">
+                    <div className="flex flex-col gap-3.5 w-full">
+                      {/* Üstte Kargo Firması Seçimi */}
                       <select
-                        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vesti-primary w-full lg:w-48 font-medium text-gray-700"
+                        className="border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vesti-primary w-full font-medium text-gray-700 cursor-pointer"
                         value={input.carrier}
-                        onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: { ...input, carrier: e.target.value } }))}
+                        onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: { number: "", carrier: e.target.value } }))}
                       >
                         <option value="">{t.carrier}</option>
                         {CARRIERS.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
+
+                      {/* Altta Takip Numarası Girişi */}
                       <input
                         type="text"
-                        placeholder={t.trackingNum}
-                        className="w-full lg:flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-vesti-primary font-medium text-gray-700"
+                        disabled={!input.carrier}
+                        maxLength={maxLength}
+                        placeholder={input.carrier ? `${input.carrier} takip numarasını girin (${maxLength} haneli)` : "Önce kargo firması seçin"}
+                        className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm bg-white disabled:bg-gray-50/80 disabled:text-gray-400 focus:outline-none focus:ring-2 focus:ring-vesti-primary font-medium text-gray-700"
                         value={input.number}
-                        onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: { ...input, number: e.target.value } }))}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const isNumericOnly = ["Yurtiçi Kargo", "Aras Kargo", "MNG Kargo", "Sürat Kargo"].includes(input.carrier);
+                          const cleanVal = isNumericOnly ? val.replace(/\D/g, "") : val;
+                          setTrackingInputs(p => ({ ...p, [order.id]: { ...input, number: cleanVal } }));
+                        }}
                       />
+
+                      {/* En Altta Kaydet Butonu */}
                       <Button
                         size="sm"
-                        className="w-full lg:w-auto bg-vesti-primary hover:bg-vesti-dark text-white rounded-xl px-6 py-2.5 h-auto font-semibold shrink-0"
-                        disabled={!!submitting}
+                        className="w-full bg-vesti-primary hover:bg-vesti-dark text-white rounded-xl px-6 py-3 h-auto font-semibold shrink-0 shadow-sm transition-colors"
+                        disabled={!!submitting || !input.number || !input.carrier}
                         onClick={() => handleShip(order.id)}
                       >
                         {submitting === order.id ? t.saving : t.save}
