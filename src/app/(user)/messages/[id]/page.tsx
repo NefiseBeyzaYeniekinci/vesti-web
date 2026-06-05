@@ -51,6 +51,7 @@ export default async function ConversationPage({
           conversation={conversation}
           initialMessages={messages}
           otherUser={other}
+          currentUserId={session?.user?.id}
         />
       </div>
     </div>

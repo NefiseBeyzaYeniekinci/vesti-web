@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Conversation, Message, MessageUser } from "@/types/message";
@@ -14,11 +12,10 @@ interface Props {
   conversation: Conversation;
   initialMessages: Message[];
   otherUser?: MessageUser;
+  currentUserId?: string;
 }
 
-export function ChatWindow({ conversation, initialMessages, otherUser }: Props) {
-  const { data: session } = useSession();
-  const currentUserId = session?.user?.id;
+export function ChatWindow({ conversation, initialMessages, otherUser, currentUserId }: Props) {
 
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const bottomRef = useRef<HTMLDivElement>(null);
