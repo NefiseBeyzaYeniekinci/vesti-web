@@ -3,6 +3,47 @@ import { getUserIdFromRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
+export async function GET(req: Request) {
+  try {
+    const userId = await getUserIdFromRequest(req);
+    if (!userId) {
+      return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        bio: true,
+        location: true,
+        isPublic: true,
+        trustScore: true,
+        savedCards: {
+          select: {
+            id: true,
+            cardName: true,
+            cardNumber: true,
+            expiryDate: true,
+            isDefault: true,
+          }
+        }
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: "Kullanıcı bulunamadı" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, user });
+  } catch (error) {
+    console.error("Profil getirme hatası:", error);
+    return NextResponse.json({ message: "Sunucu hatası oluştu" }, { status: 500 });
+  }
+}
+
 export async function PUT(req: Request) {
   try {
     const userId = await getUserIdFromRequest(req);
