@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getUserIdFromRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 
 // GET /api/user/city — Kullanıcının kayıtlı şehir kodunu getir
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+export async function GET(req: Request) {
+  const userId = await getUserIdFromRequest(req);
+  if (!userId) {
     return NextResponse.json({ cityCode: "Istanbul" });
   }
 
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: userId },
     select: { cityCode: true },
   });
 
@@ -19,8 +19,8 @@ export async function GET() {
 
 // PUT /api/user/city — Kullanıcının şehir kodunu güncelle
 export async function PUT(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getUserIdFromRequest(req);
+  if (!userId) {
     return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
   }
 
@@ -30,7 +30,7 @@ export async function PUT(req: Request) {
   }
 
   await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: userId },
     data: { cityCode: cityCode.trim() },
   });
 

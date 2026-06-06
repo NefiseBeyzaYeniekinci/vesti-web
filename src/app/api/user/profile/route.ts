@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getUserIdFromRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
 export async function PUT(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(req);
+    if (!userId) {
       return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
     }
 
     const { name, bio, location, isPublic, currentPassword, newPassword } = await req.json();
 
     const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
     });
 
     if (!currentUser) {
@@ -49,7 +49,7 @@ export async function PUT(req: Request) {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: userId },
       data: updateData,
       select: { id: true, name: true, email: true },
     });

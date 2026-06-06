@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getUserIdFromRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(req);
+    if (!userId) {
       return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
     }
 
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
     const newCard = await prisma.savedCard.create({
       data: {
-        userId: session.user.id,
+        userId: userId,
         cardName,
         cardNumber: maskedNumber,
         expiryDate,
@@ -39,8 +39,8 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const userId = await getUserIdFromRequest(req);
+    if (!userId) {
       return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
     }
 
@@ -53,7 +53,7 @@ export async function DELETE(req: Request) {
 
     // Güvenlik doğrulaması: Bu kart gerçekten bu kullanıcıya mı ait?
     const card = await prisma.savedCard.findUnique({ where: { id: cardId } });
-    if (!card || card.userId !== session.user.id) {
+    if (!card || card.userId !== userId) {
       return NextResponse.json({ message: "Kart bulunamadı veya yetkiniz yok" }, { status: 404 });
     }
 

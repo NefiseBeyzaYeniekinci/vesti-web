@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getUserIdFromRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 import { AppNotification } from "@/store/notificationStore";
 
 // GET /api/notifications — Gerçek zamanlı bildirimler: okunmamış mesajlar + sipariş eventleri
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+export async function GET(req: Request) {
+  const userId = await getUserIdFromRequest(req);
+  if (!userId) {
     return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
   }
 
-  const userId = session.user.id;
   const notifications: AppNotification[] = [];
 
   try {
@@ -131,9 +130,9 @@ export async function GET() {
 }
 
 // PATCH /api/notifications — Tüm mesajları okundu olarak işaretle
-export async function PATCH() {
-  const session = await auth();
-  if (!session?.user?.id) {
+export async function PATCH(req: Request) {
+  const userId = await getUserIdFromRequest(req);
+  if (!userId) {
     return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
   }
 
@@ -142,10 +141,10 @@ export async function PATCH() {
     await prisma.message.updateMany({
       where: {
         read: false,
-        senderId: { not: session.user.id },
+        senderId: { not: userId },
         conversation: {
           participants: {
-            some: { userId: session.user.id },
+            some: { userId: userId },
           },
         },
       },
