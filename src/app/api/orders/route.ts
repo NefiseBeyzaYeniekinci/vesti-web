@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getUserIdFromRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 
 // GET /api/orders - Kullanıcının alıcı ya da satıcı olduğu siparişleri getir
 export async function GET(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getUserIdFromRequest(req);
+  if (!userId) {
     return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
   }
 
@@ -14,8 +14,8 @@ export async function GET(req: Request) {
 
   const orders = await prisma.order.findMany({
     where: role === "buyer"
-      ? { buyerId: session.user.id }
-      : { sellerId: session.user.id },
+      ? { buyerId: userId }
+      : { sellerId: userId },
     include: {
       listing: {
         select: {
@@ -43,8 +43,8 @@ export async function GET(req: Request) {
 
 // POST /api/orders - Yeni sipariş oluştur
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getUserIdFromRequest(req);
+  if (!userId) {
     return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
   }
 
@@ -67,14 +67,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Bu ilan artık satışta değil" }, { status: 400 });
   }
 
-  if (listing.userId === session.user.id) {
+  if (listing.userId === userId) {
     return NextResponse.json({ message: "Kendi ilanınızı satın alamazsınız" }, { status: 400 });
   }
 
   const [order] = await prisma.$transaction([
     prisma.order.create({
       data: {
-        buyerId: session.user.id,
+        buyerId: userId,
         sellerId: listing.userId,
         listingId: listing.id,
         price: listing.price,

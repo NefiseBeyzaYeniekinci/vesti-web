@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getUserIdFromRequest } from "@/lib/api-auth";
 import { prisma } from "@/lib/db";
 
 // PATCH /api/orders/[id]/tracking - Satıcı kargo takip numarası girer
@@ -7,8 +7,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getUserIdFromRequest(req);
+  if (!userId) {
     return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
   }
 
@@ -30,7 +30,7 @@ export async function PATCH(
     return NextResponse.json({ message: "Sipariş bulunamadı" }, { status: 404 });
   }
 
-  if (order.sellerId !== session.user.id) {
+  if (order.sellerId !== userId) {
     return NextResponse.json({ message: "Bu siparişe erişim yetkiniz yok" }, { status: 403 });
   }
 
@@ -60,8 +60,8 @@ export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await getUserIdFromRequest(req);
+  if (!userId) {
     return NextResponse.json({ message: "Yetkisiz erişim" }, { status: 401 });
   }
 
@@ -80,7 +80,7 @@ export async function GET(
   }
 
   // Sadece alıcı veya satıcı görebilir
-  if (order.buyerId !== session.user.id && order.sellerId !== session.user.id) {
+  if (order.buyerId !== userId && order.sellerId !== userId) {
     return NextResponse.json({ message: "Bu siparişe erişim yetkiniz yok" }, { status: 403 });
   }
 
