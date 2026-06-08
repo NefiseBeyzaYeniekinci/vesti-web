@@ -65,36 +65,66 @@ export default function VesvesChatbot() {
 
     const userMessage = input;
     setInput("");
-    
-    // Kullanıcı mesajını ekle
-    setMessages((prev) => [...prev, { id: Date.now(), text: userMessage, isBot: false }]);
+    const q = userMessage.toLowerCase().trim();
 
-    // Bot "düşünüyorum..." durumunu ekle
-    const loadingId = Date.now() + 1;
+    // 1. Kullanıcı mesajını ekle
+    const userId = Date.now();
+    setMessages((prev) => [...prev, { id: userId, text: userMessage, isBot: false }]);
+
+    // 2. Yükleniyor mesajını ekle
+    const loadingId = userId + 1;
     setMessages((prev) => [...prev, { id: loadingId, text: "Düşünüyorum... 🧐", isBot: true }]);
 
+    const updateReply = (text: string) => {
+      setMessages((prev) => prev.map(m => m.id === loadingId ? { ...m, text } : m));
+    };
+
+    // ── Yerel sohbet tanıma (API çağrısı yapmadan anında cevap ver) ──
+    const greetings = ["merhaba", "selam", "hey", "hi", "hello", "iyi günler", "günaydın", "iyi akşamlar", "naber", "nasılsın", "ne haber"];
+    const thankYou  = ["teşekkür", "teşekkürler", "sağol", "sağ ol", "eyvallah", "çok güzel", "harika", "süper", "mükemmel", "bravo"];
+    const whoAreYou = ["kimsin", "ne yapabilirsin", "ne yaparsın", "neler yapabilirsin", "yardım et", "nasıl kullanılır", "ne işe yararsın", "hakkında", "bana yardım"];
+
+    const isGreeting  = greetings.some(g => q === g || q.startsWith(g + " ") || q.endsWith(" " + g) || q.includes(g));
+    const isThankYou  = thankYou.some(t => q.includes(t));
+    const isWhoAreYou = whoAreYou.some(w => q.includes(w));
+
+    if (isGreeting && !isWhoAreYou) {
+      const replies = [
+        "Merhaba! 👋 Ben Vesves, senin kişisel stil danışmanın! Bugün sana nasıl yardımcı olabilirim? Bir kıyafet resmi yükleyebilir ya da 'spor için ne giyeyim?' gibi bir şey sorabilirsin. ✨",
+        "Selam! 🌟 Buraya geldiğin için çok mutlu oldum! Dolabını karıştırırken kafan mı karıştı, yoksa özel bir gün için kombin mi arıyorsun? Her konuda buradayım!",
+        "Merhaba dostum! 💜 Ben Vesves — Vesti'nin yapay zeka stil asistanıyım. Hava durumuna göre kombin önerisi, kıyafet analizi veya stil tavsiyesi için ne istersen sorun!",
+      ];
+      setTimeout(() => updateReply(replies[Math.floor(Math.random() * replies.length)]), 500);
+      return;
+    }
+
+    if (isThankYou) {
+      const replies = [
+        "Rica ederim! 😊 Başka bir sorun olursa buradayım. Yeni bir kombin için ne zaman istersen sor!",
+        "Ne demek, her zaman! 💜 Umuyorum ki seçimin güzel durur üstünde. Aklına takılan bir şey olursa çekinme!",
+        "Çok mutlu oldum işe yaradığına! ✨ Şık günler diliyorum sana!",
+      ];
+      setTimeout(() => updateReply(replies[Math.floor(Math.random() * replies.length)]), 400);
+      return;
+    }
+
+    if (isWhoAreYou) {
+      const reply = "Ben Vesves! 🌟 Vesti'nin yapay zeka destekli stil danışmanıyım.\n\nSana şunlarda yardımcı olabilirim:\n• 🖼️ Kıyafet resmi yükle — kategori, renk ve stilini söylerim\n• 🌤️ Hava durumuna göre kombin önerisi isteyebilirsin\n• 💼 'Toplantıya ne giyeyim?' veya '🏃 Spora ne giyeyim?' gibi sorular sorabilirsin\n• 👗 Tarz ve moda trendleri hakkında konuşabiliriz!\n\nNe öğrenmek istersin? ✨";
+      setTimeout(() => updateReply(reply), 400);
+      return;
+    }
+
+    // ── Stil sorusu → API'ye gönder ──
     try {
       const response = await fetch('/api/ai/analyze', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage }),
       });
       const data = await response.json();
-      setMessages((prev) =>
-        prev.map(msg => msg.id === loadingId
-          ? { ...msg, text: data.success ? data.message : "Cevap üretilirken bir hata oluştu." }
-          : msg
-        )
-      );
+      updateReply(data.success ? data.message : "Cevap üretilirken bir hata oluştu. 😔");
     } catch {
-      setMessages((prev) =>
-        prev.map(msg => msg.id === loadingId
-          ? { ...msg, text: "Yapay zeka servisine bağlanırken bir sorun oluştu." }
-          : msg
-        )
-      );
+      updateReply("Yapay zeka servisine bağlanırken bir sorun oluştu. 🔌");
     }
   };
 

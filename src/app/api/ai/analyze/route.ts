@@ -2,8 +2,17 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/db";
 import { getWeatherByCity } from "@/lib/api/weather";
+import { GoogleGenAI } from "@google/genai";
 
 export const runtime = "nodejs";
+
+const systemInstruction = `
+Sen Vesti uygulamasının akıllı stil ve moda danışmanı "Vesves"sin.
+Kullanıcılarla son derece samimi, sıcak, cana yakın ve sanki yakın bir arkadaşıymış gibi Türkçe dilinde konuşmalısın.
+Kullanıcının yüklediği kıyafet resimlerini veya sorduğu stil sorularını inceleyip onlara trendlere uygun, yaratıcı stil tavsiyeleri vermelisin.
+Cümlelerin motive edici, yapıcı ve samimi olmalıdır (Örn: 'Bu harika bir seçim!', 'Dolabındaki siyah botlarla nefis durur!').
+Kullanıcı sana belirli aktiviteler veya hava durumlarıyla ilgili sorular sorduğunda, hava durumunu da hesaba katarak en uygun önerileri yap.
+`;
 
 export async function POST(req: Request) {
   try {
@@ -20,135 +29,157 @@ export async function POST(req: Request) {
       message = (formData.get("message") as string) || "";
     }
 
-    // 1. Eğer resim yoksa, sadece sözel (metinsel) konuşma yapılmak isteniyordur
+    const session = await auth();
+    const userId = session?.user?.id;
+    let cityCode = "Istanbul";
+
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { location: true },
+      });
+      if (user?.location) {
+        cityCode = user.location.split(',')[0].trim();
+      }
+    }
+
+    // Hava durumunu çek
+    const weather = await getWeatherByCity(cityCode, "tr");
+    const temp = weather?.main?.temp ?? 20;
+    const weatherDesc = weather?.weather?.[0]?.description ?? "";
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (apiKey) {
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        
+        let contents: any[] = [];
+        
+        if (file) {
+          const arrayBuffer = await file.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const base64Image = buffer.toString("base64");
+          const mimeType = file.type;
+
+          contents.push({
+            inlineData: {
+              data: base64Image,
+              mimeType: mimeType
+            }
+          });
+
+          const promptText = message.trim() 
+            ? `Bu görseldeki kıyafeti incele. Kullanıcının sorusu: "${message}". Lütfen samimi bir stil önerisinde bulun.`
+            : `Bu görseldeki kıyafeti incele ve samimi bir stil/kombin önerisinde bulun.`;
+          contents.push(promptText);
+        } else {
+          contents.push(`Kullanıcının sorusu: "${message}"\nKonum: ${cityCode}\nGüncel Hava Durumu: ${temp}°C, ${weatherDesc}. Lütfen bu hava durumu ve soruyu dikkate alarak samimi bir stil önerisinde bulun.`);
+        }
+
+        const response = await ai.models.generateContent({
+          model: "gemini-2.0-flash",
+          contents: contents,
+          config: {
+            systemInstruction: systemInstruction,
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "OBJECT",
+              properties: {
+                category: {
+                  type: "STRING",
+                  description: "Kıyafetin en uygun olduğu stil kategorisi: winter clothing, summer clothing, casual wear, formal elegant wear, streetwear, vintage clothing"
+                },
+                message: {
+                  type: "STRING",
+                  description: "Kullanıcıya samimi, arkadaşça ve Türkçe stil önerisi cevabı."
+                }
+              },
+              required: ["category", "message"]
+            }
+          }
+        });
+
+        const textResponse = typeof response.text === "function" 
+          ? (response as any).text() 
+          : response.text;
+
+        if (textResponse) {
+          const parsed = JSON.parse(textResponse);
+          return NextResponse.json({
+            success: true,
+            category: parsed.category,
+            message: parsed.message
+          });
+        }
+      } catch (geminiError) {
+        console.error("Gemini API hatası, fallback simülasyona geçiliyor:", geminiError);
+      }
+    }
+
+    // ─── FALLBACK SIMULATION (If Gemini is not configured or fails) ───
     if (!file) {
       if (!message.trim()) {
         return NextResponse.json({ error: "Mesaj veya resim bulunamadı" }, { status: 400 });
       }
 
-      // Kullanıcının konumunu ve hava durumunu çekelim
-      const session = await auth();
-      const userId = session?.user?.id;
-      let cityCode = "Istanbul";
-
-      if (userId) {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { location: true },
-        });
-        if (user?.location) {
-          cityCode = user.location.split(',')[0].trim();
-        }
-      }
-
-      const weather = await getWeatherByCity(cityCode, "tr");
-      const temp = weather?.main?.temp ?? 20;
-      const weatherMain = weather?.weather?.[0]?.main ?? "Clear";
-      const weatherDesc = weather?.weather?.[0]?.description ?? "";
-
       const query = message.toLowerCase();
       let responseText = "";
 
       // Spor/Workout araması
-      if (query.includes("spor") || query.includes("koşu") || query.includes("gym") || query.includes("antrenman") || query.includes("egzersiz") || query.includes("koşacağım") || query.includes("workout")) {
+      if (query.includes("spor") || query.includes("koşu") || query.includes("gym") || query.includes("antrenman")) {
         if (temp > 22) {
-          responseText = `Bulunduğun konumdaki (${cityCode}) sıcak ve güzel havayı (${Math.round(temp)}°C) düşünürsek; hafif ve nefes alabilen bir tişört, altına spor bir şort ve rahat koşu ayakkabıların sporun için harika bir kombin olacaktır! 🏃‍♂️☀️`;
+          responseText = `Harika bir spor günü! 🏃‍♂️ Konumundaki (${cityCode}) sıcak havayı (${Math.round(temp)}°C) düşünürsek; hafif ve nefes alabilen bir tişört, spor şort ve rahat sneaker'larınla spora hazırsın!`;
         } else if (temp < 14) {
-          responseText = `Bulunduğun konumdaki (${cityCode}) soğuk havayı (${Math.round(temp)}°C) düşünürsek; rüzgar geçirmeyen ince bir ceket, altına uzun spor taytı/eşofman altı ve içine terletmeyen spor bir tişört giymen sporun için çok koruyucu ve güzel bir kombin olur! 🏃‍♂️❄️`;
+          responseText = `Hava biraz serin (${Math.round(temp)}°C). Rüzgar geçirmeyen ince bir ceket, altına spor taytı ve terletmeyen tişörtünle harika bir spor kombini yapabilirsin!`;
         } else {
-          responseText = `Bulunduğun konumdaki (${cityCode}) ılık havayı (${Math.round(temp)}°C) düşünürsek; tişört üzerine ince bir ceket/sweatshirt ve altına bir şort veya eşofman altı sporun için güzel bir kombin olabilir! 🏃‍♂️✨`;
+          responseText = `Hava ılık (${Math.round(temp)}°C). Üzerine ince bir sweatshirt ve altına rahat bir eşofman altı alıp spora başlayabilirsin! 🏃‍♂️`;
         }
       }
-      // Toplantı/İş/Ofis araması
-      else if (query.includes("toplantı") || query.includes("iş") || query.includes("görüşme") || query.includes("mülakat") || query.includes("ofis") || query.includes("resmi")) {
+      // Toplantı/İş araması
+      else if (query.includes("toplantı") || query.includes("iş") || query.includes("görüşme") || query.includes("ofis")) {
         if (temp > 22) {
-          responseText = `Bugün hava oldukça sıcak (${Math.round(temp)}°C). Ofis/toplantı için ince bir keten gömlek, kumaş pantolon ve makosen ayakkabılar ile hem profesyonel hem de ferah görünebilirsin! 💼☀️`;
+          responseText = `Bugün hava oldukça sıcak (${Math.round(temp)}°C). Ofis için ince keten gömlek, kumaş pantolon ve makosenler hem profesyonel hem de çok ferah! 💼`;
         } else if (temp < 14) {
-          responseText = `Dışarıda soğuk bir hava var (${Math.round(temp)}°C). Resmi bir toplantı için şık bir blazer ceket, içine klasik bir balıkçı yaka kazak ve kumaş pantolon harika bir kış ofis stili olacaktır! 💼❄️`;
+          responseText = `Ofiste şık olmak için harika bir gün! Sıcak bir kış kombini olarak şık bir blazer ceket, ince balıkçı yaka kazak ve kumaş pantolon tercih edebilirsin.`;
         } else {
-          responseText = `Ilık bir hava var (${Math.round(temp)}°C). Toplantın için şık bir gömlek üzerine blazer ceket ve keten pantolon kombini her ortama uyum sağlayacaktır! 💼✨`;
+          responseText = `Ilık bir havada ofis için blazer ceket, şık bir gömlek ve keten pantolon kombini kurtarıcın olacaktır!`;
         }
-      }
-      // Parti/Davet/Düğün araması
-      else if (query.includes("parti") || query.includes("düğün") || query.includes("gece") || query.includes("davet") || query.includes("kulüp") || query.includes("eğlence")) {
-        if (temp > 22) {
-          responseText = `Sıcak bir yaz gecesi için şık, askılı bir elbise veya ince şık bir gömlek + keten pantolon kombini harika gider! ✨`;
-        } else if (temp < 14) {
-          responseText = `Soğuk havada şık bir davet için kabanının altına giyeceğin şık bir takım elbise veya kadife şık bir elbise harika bir tercih olur! ❄️✨`;
-        } else {
-          responseText = `Güzel bir akşam için şık bir ceket ve alt tonlarda pantolon ile tarzını yansıtabilirsin! ✨`;
-        }
-      }
-      // Yağmur araması
-      else if (query.includes("yağmur") || query.includes("yağmurlu") || query.includes("ıslak") || query.includes("şemsiye")) {
-        responseText = `Bugün yağmur ihtimaline karşı su geçirmez bir trençkot/yağmurluk ve su geçirmeyen botlarını tercih etmelisin. Şemsiyeni yanına almayı sakın unutma! ☔🌧️`;
       }
       // Genel tavsiye
       else {
         if (temp > 22) {
-          responseText = `Bulunduğun konumda (${cityCode}) hava oldukça sıcak (${Math.round(temp)}°C). Terletmeyen, pamuklu hafif bir tişört veya gömlek ile altına şort/jean giyerek günün tadını çıkarabilirsin! ☀️`;
+          responseText = `Bulunduğun yerde (${cityCode}) hava oldukça sıcak (${Math.round(temp)}°C). Pamuklu hafif bir tişört ve şık bir şortla günün tadını çıkarabilirsin! ☀️`;
         } else if (temp < 14) {
-          responseText = `Bulunduğun konumda (${cityCode}) hava soğuk (${Math.round(temp)}°C). Kalın bir kazak, üzerine sıcak tutacak bir mont/kaban ve altına kalın pantolonlar tercih ederek katmanlı giyinmeni öneririm! ❄️🧣`;
+          responseText = `Hava soğuk (${Math.round(temp)}°C). Kalın bir kazak, üzerine sıcak tutacak kabanını giyerek katmanlı bir tarz oluşturabilirsin. ❄️`;
         } else {
-          responseText = `Bulunduğun konumda (${cityCode}) hava oldukça ılık (${Math.round(temp)}°C). Tişört üzerine alacağın hafif bir hırka veya ince bir ceket hem serin rüzgarlardan korur hem de tarzına şıklık katar! 🍃`;
+          responseText = `Hava oldukça ılık (${Math.round(temp)}°C). Tişört üzerine alacağın ince bir hırka hem rüzgardan korur hem de stiline harika bir hava katar! 🍃`;
         }
       }
 
       return NextResponse.json({
         success: true,
+        category: "casual wear",
         message: responseText
       });
     }
 
-    // 2. Eğer resim varsa, resim analiziyle devam et
-    const aiServerUrl = process.env.AI_SERVER_URL || process.env.NEXT_PUBLIC_AI_SERVER_URL;
-
-    if (aiServerUrl) {
-      try {
-        const pyFormData = new FormData();
-        pyFormData.append("image", file);
-
-        const response = await fetch(`${aiServerUrl}/api/analyze`, {
-          method: "POST",
-          body: pyFormData,
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return NextResponse.json(data);
-        }
-      } catch (err) {
-        console.error("Python AI Server'a bağlanırken hata oluştu, simülasyona geçiliyor:", err);
-      }
-    }
-
-    // Gelişmiş yapay zeka etiketleme simülasyonu (Vercel/Production Fallback)
-    const labels = [
-      "winter clothing", 
-      "summer clothing", 
-      "casual wear", 
-      "formal elegant wear",
-      "streetwear",
-      "vintage clothing"
-    ];
-    
+    // Görsel analiz simülasyonu
+    const labels = ["winter clothing", "summer clothing", "casual wear", "formal elegant wear", "streetwear", "vintage clothing"];
     const best_label = labels[Math.floor(Math.random() * labels.length)];
-    
     const tr_responses: Record<string, string> = {
-      "winter clothing": "Bu bir kışlık kıyafet! ❄️ Koyu renk bir kaban veya kalın bir atkı ile harika durur.",
-      "summer clothing": "Harika bir yazlık parça! ☀️ Açık renkli sandaletler ve hasır bir çanta ile kombinleyebilirsin.",
-      "casual wear": "Çok rahat ve günlük bir tarz! 👖 Beyaz sneaker'lar bu kombinin kurtarıcısı olacaktır.",
-      "formal elegant wear": "Çok şık ve resmi bir parça! ✨ Özel davetler için topuklu ayakkabı ve zarif takılarla tamamlayabilirsin.",
+      "winter clothing": "Bu bir kışlık kıyafet! ❄️ Koyu renk bir kaban veya kalın bir atkı ile harika durur. Sohbet tadında öneriler için lütfen .env.local dosyana GEMINI_API_KEY ekle!",
+      "summer clothing": "Harika bir yazlık parça! ☀️ Açık renkli sandaletler ve hasır bir çanta ile kombinleyebilirsin. Daha akıllı öneriler için GEMINI_API_KEY tanımlayabilirsin.",
+      "casual wear": "Çok rahat ve günlük bir tarz! 👖 Beyaz sneaker'lar bu kombinin kurtarıcısı olacaktır. Sohbet robotunu canlandırmak için GEMINI_API_KEY ekleyebilirsin.",
+      "formal elegant wear": "Çok şık ve resmi bir parça! ✨ Özel davetler için topuklu ayakkabı ve zarif takılarla tamamlayabilirsin. Gemini entegrasyonu için API anahtarını eklemeyi unutma!",
       "streetwear": "Tam bir sokak stili! 🛹 Oversize bir ceket veya dikkat çekici spor ayakkabılarla çok havalı durur.",
       "vintage clothing": "Harika bir vintage esintisi! 🕰️ Retro güneş gözlükleri ve deri detaylarla bu tarzı güçlendirebilirsin."
     };
-    
-    const response_text = tr_responses[best_label] || "Görseldeki kıyafeti çok beğendim! Harika bir seçim.";
 
     return NextResponse.json({
       success: true,
       category: best_label,
-      message: response_text
+      message: tr_responses[best_label]
     });
 
   } catch (error) {
