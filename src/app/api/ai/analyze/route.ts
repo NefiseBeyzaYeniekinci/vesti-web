@@ -117,49 +117,127 @@ export async function POST(req: Request) {
       }
     }
 
-    // ─── FALLBACK SIMULATION (If Gemini is not configured or fails) ───
+    // ─── FALLBACK (Gemini yapılandırılmamış veya başarısız olduğunda) ───
     if (!file) {
       if (!message.trim()) {
         return NextResponse.json({ error: "Mesaj veya resim bulunamadı" }, { status: 400 });
       }
 
-      const query = message.toLowerCase();
+      const q = message.toLowerCase();
+      const t = Math.round(temp);
       let responseText = "";
+      let category = "casual wear";
 
-      // Spor/Workout araması
-      if (query.includes("spor") || query.includes("koşu") || query.includes("gym") || query.includes("antrenman")) {
-        if (temp > 22) {
-          responseText = `Harika bir spor günü! 🏃‍♂️ Konumundaki (${cityCode}) sıcak havayı (${Math.round(temp)}°C) düşünürsek; hafif ve nefes alabilen bir tişört, spor şort ve rahat sneaker'larınla spora hazırsın!`;
-        } else if (temp < 14) {
-          responseText = `Hava biraz serin (${Math.round(temp)}°C). Rüzgar geçirmeyen ince bir ceket, altına spor taytı ve terletmeyen tişörtünle harika bir spor kombini yapabilirsin!`;
-        } else {
-          responseText = `Hava ılık (${Math.round(temp)}°C). Üzerine ince bir sweatshirt ve altına rahat bir eşofman altı alıp spora başlayabilirsin! 🏃‍♂️`;
-        }
+      // ── Hava & mevsim yardımcıları ──
+      const sicak = temp > 22;
+      const soguk = temp < 14;
+      const ilik  = !sicak && !soguk;
+      const hava  = sicak ? `sıcak (${t}°C)` : soguk ? `soğuk (${t}°C)` : `ılık (${t}°C)`;
+
+      // 1. Spor / Egzersiz
+      if (q.match(/spor|koşu|gym|antrenman|egzersiz|workout|fitness|yürüyüş|pilates|yoga/)) {
+        category = "casual wear";
+        if (sicak) responseText = `Bugün ${hava}! Spor için hafif, nefes alabilen bir tişört + spor şort + koşu ayakkabısı ideal kombin. 🏃‍♀️☀️`;
+        else if (soguk) responseText = `Hava ${hava}. Isıyı içinde tutan termal tayt, ince rüzgarlık ve spor tişört ile spora hazırsın! 🏃‍♀️❄️`;
+        else responseText = `${hava} bir hava var. İnce bir eşofman altı + sweatshirt kombinasyonu spor için mükemmel! 🏃‍♀️`;
       }
-      // Toplantı/İş araması
-      else if (query.includes("toplantı") || query.includes("iş") || query.includes("görüşme") || query.includes("ofis")) {
-        if (temp > 22) {
-          responseText = `Bugün hava oldukça sıcak (${Math.round(temp)}°C). Ofis için ince keten gömlek, kumaş pantolon ve makosenler hem profesyonel hem de çok ferah! 💼`;
-        } else if (temp < 14) {
-          responseText = `Ofiste şık olmak için harika bir gün! Sıcak bir kış kombini olarak şık bir blazer ceket, ince balıkçı yaka kazak ve kumaş pantolon tercih edebilirsin.`;
-        } else {
-          responseText = `Ilık bir havada ofis için blazer ceket, şık bir gömlek ve keten pantolon kombini kurtarıcın olacaktır!`;
-        }
+
+      // 2. Arkadaş buluşması / Kafede / Günlük
+      else if (q.match(/arkadaş|buluşma|kafe|cafe|kahve|gezme|gezinti|çıkmak|çıkıyorum|casual|günlük|rahat/)) {
+        category = "casual wear";
+        if (sicak) responseText = `Arkadaş buluşması için hava ${hava} — hafif bir elbise veya crop top + jean kombinasyonu tam da bu hava için biçilmiş kaftan! 👗☀️`;
+        else if (soguk) responseText = `Hava ${hava}, üşümemek için şık bir kaban altına turtleneck + skinny jean çok havalı durur arkadaş buluşmasında! 🧥`;
+        else responseText = `Kafe buluşması için ${hava} bir gün — oversized bir gömlek veya örme kazak + mom jean + beyaz sneaker kombinini tavsiye ederim! 🤍`;
       }
-      // Genel tavsiye
+
+      // 3. Elbise / Etek seçimi
+      else if (q.match(/elbise|etek|dress|maxi|mini|midi|rop|fıstık|şık görün|zarif/)) {
+        category = "formal elegant wear";
+        if (sicak) responseText = `Elbise harika bir seçim olur bu ${hava} için! Hafif kumaşlı askılı veya kısa kollu bir elbise — yanına sandalet ve küçük bir el çantası ekle, mükemmel görünürsün. 👗✨`;
+        else if (soguk) responseText = `Elbise giymek istiyorsan bu ${hava} içini örten kalın bir külotlu çorap + uzun elbise + üzerine trençkot kombinini dene! Hem şık hem sıcak. 🧥👗`;
+        else responseText = `${hava} bir günde etek ya da elbise için harika! Midi boy bir elbise veya pileli etek + bluz kombinasyonu çok şık durur. ✨`;
+      }
+
+      // 4. Toplantı / İş / Ofis / Mülakat
+      else if (q.match(/toplantı|iş|ofis|görüşme|mülakat|sunum|resmi|profesyonel/)) {
+        category = "formal elegant wear";
+        if (sicak) responseText = `Ofis için hava ${hava}. İnce keten gömlek veya bluz + kumaş pantolon + makosen ayakkabı hem profesyonel hem ferah! 💼`;
+        else if (soguk) responseText = `Toplantı için ${hava} bir gün — klasik bir blazer ceket, içine balıkçı yaka kazak + kumaş pantolon her zaman güvenli ve şık! 💼`;
+        else responseText = `İş görüşmesi için ${hava} hava — blazer + şık bluz/gömlek + düz renk pantolon kombinini öneririm. 💼`;
+      }
+
+      // 5. Akşam yemeği / Romantik / Date
+      else if (q.match(/akşam yemeği|restoran|romantik|sevgili|date|randevu|özel gece|sevgilimle/)) {
+        category = "formal elegant wear";
+        if (sicak) responseText = `Romantik bir akşam için ${hava} var — ince askılı bir midi elbise veya şık bir bluz + dar pantolon + topuklu sandalet çok şık olur! 🌹✨`;
+        else if (soguk) responseText = `${hava} bir akşam yemeği için kadife veya saten detaylı bir elbise + üzerine şık bir kaban + bot kombinasyonu hem sıcak hem zarif! 🌹`;
+        else responseText = `Akşam yemeği için ${hava} — şık bir midi elbise veya blazer + saten bluz kombinasyonunu dene, harika görünürsün! 🌹`;
+      }
+
+      // 6. Parti / Gece kulübü / Düğün / Davet
+      else if (q.match(/parti|gece kulüb|kulüp|düğün|davet|nişan|eğlence|kutlama|kına|balo/)) {
+        category = "formal elegant wear";
+        if (sicak) responseText = `Parti için ${hava} var! Mini elbise veya şık iki parça set + topuklu sandalet + büyük küpeler ile gecenin yıldızı olursun! 🎉✨`;
+        else responseText = `Düğün/davet için zarif bir midi/maxi elbise veya şık bir tulum — üzerine ince bir şal veya ceket ekleyebilirsin. 🥂✨`;
+      }
+
+      // 7. Plaj / Tatil / Yüzme
+      else if (q.match(/plaj|deniz|tatil|yüzme|bikini|mayo|sahil|yaz tatili|resort/)) {
+        category = "summer clothing";
+        responseText = `Plaj için en iyi seçimler: bikini veya mayo üzerine ince bir pareo ya da kısa elbise, sandalet ve güneş şapkası! Güneş kremini de unutma! 🌊☀️`;
+      }
+
+      // 8. Okul / Üniversite / Kampüs
+      else if (q.match(/okul|üniversite|kampüs|derse|sınıfa|öğrenci/)) {
+        category = "casual wear";
+        if (sicak) responseText = `Okul için ${hava} — rahat bir tişört + straight leg jean + beyaz sneaker kombinasyonu hem şık hem rahat! 🎒`;
+        else if (soguk) responseText = `Kampüse giderken ${hava} var — kalın bir hoodie veya kazak + mom jean + bot kombinasyonuna parka ceket ekle! 🎒❄️`;
+        else responseText = `Okul için ${hava} bir gün — oversized bir gömlek veya kazak + jean + sneaker her zaman kurtarıcıdır! 🎒`;
+      }
+
+      // 9. Kışlık / Sıcak tutma
+      else if (q.match(/soğukta|üşüyorum|sıcak tut|kışlık|mont|kaban|kalın/)) {
+        category = "winter clothing";
+        responseText = `${hava} bir hava için katmanlı giyinmek şart! İçe ince termal, üzerine kalın bir kazak, en dışa da dolgu mont + atkı + bere + kar botu kombinasyonu seni sıcacık tutar! ❄️🧣`;
+      }
+
+      // 10. Yağmur / Islak hava
+      else if (q.match(/yağmur|yağmurlu|ıslak|şemsiye|yağacak|bulutlu/)) {
+        category = "casual wear";
+        responseText = `Yağmurlu bir hava! ☔ Su geçirmez trençkot veya yağmurluk + su geçirmez bot + koyu renk pantolon kombinini önerir, şemsiyeni yanına almayı unutmazsın!`;
+      }
+
+      // 11. Vintage / Retro tarz
+      else if (q.match(/vintage|retro|klasik|90lar|80ler|thrift/)) {
+        category = "vintage clothing";
+        responseText = `Vintage tarz için harika öneriler: yüksek bel wide-leg pantolon + blazer veya crop tişört, deri ceket + bootcut jean + platform ayakkabı. Retro güneş gözlüğü de şart! 🕰️✨`;
+      }
+
+      // 12. Streetwear / Sokak modası
+      else if (q.match(/sokak|streetwear|oversize|hoodie|sweatshirt|sneaker|hype/)) {
+        category = "streetwear";
+        responseText = `Sokak stili için oversize hoodie veya grafik tişört + cargo pantolon + chunky sneaker kombinasyonu çok havalı! Bere veya kep de ekleyebilirsin. 🛹🔥`;
+      }
+
+      // 13. Ne giyeyim / Genel kombin önerisi
+      else if (q.match(/ne giyeyim|ne giysem|kombin|öneri|tavsiye|yardım|ne giymeli/)) {
+        category = "casual wear";
+        if (sicak) responseText = `${hava} bir günde en iyi seçimler: hafif bir elbise veya şort + tişört kombinasyonu + sandalet ya da beyaz sneaker. Hafif kumaşları tercih et! ☀️👗`;
+        else if (soguk) responseText = `${hava} bu havada katmanlı giyinmek altın kural! Kalın kazak + jean + bot + üzerine sıcak tutan bir kaban. Atkı ve bere de ekleyebilirsin! ❄️🧣`;
+        else responseText = `${hava} bir gün için en şık seçim: tişört veya bluz + jean + ince bir dış ceket veya hırka + sneaker. Sade ama şık! ✨`;
+      }
+
+      // Genel fallback
       else {
-        if (temp > 22) {
-          responseText = `Bulunduğun yerde (${cityCode}) hava oldukça sıcak (${Math.round(temp)}°C). Pamuklu hafif bir tişört ve şık bir şortla günün tadını çıkarabilirsin! ☀️`;
-        } else if (temp < 14) {
-          responseText = `Hava soğuk (${Math.round(temp)}°C). Kalın bir kazak, üzerine sıcak tutacak kabanını giyerek katmanlı bir tarz oluşturabilirsin. ❄️`;
-        } else {
-          responseText = `Hava oldukça ılık (${Math.round(temp)}°C). Tişört üzerine alacağın ince bir hırka hem rüzgardan korur hem de stiline harika bir hava katar! 🍃`;
-        }
+        category = "casual wear";
+        if (sicak) responseText = `${cityCode} bölgesinde hava ${hava}. Hafif, nefes alabilen pamuklu bir tişört ve şort veya ince elbiseyle günün tadını çıkarabilirsin! ☀️`;
+        else if (soguk) responseText = `Hava ${hava}. Kalın bir kazak + kaban + jean + bot kombinasyonuyla hem sıcak hem de şık olabilirsin! ❄️`;
+        else responseText = `Hava ${hava}. Tişört + hırka veya ince ceket + jean kombinasyonu her ortama uyar. Günün harika geçsin! ✨`;
       }
 
       return NextResponse.json({
         success: true,
-        category: "casual wear",
+        category,
         message: responseText
       });
     }
